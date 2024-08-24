@@ -5,6 +5,7 @@ import userRouter from "./routes/userRoutes.js"
 import teacherRouter from './routes/teacherRoutes.js';
 import studentRouter from './routes/studentRoutes.js';
 import cors from "cors"
+import { corsMiddleware, jsonParser, urlEncodedParser } from './middlewares/middlewares.js';
 // Load environment variables
 dotenv.config();
 
@@ -13,11 +14,14 @@ connectDB();
 
 const app = express();
 
-// Body parser middleware
-app.use(express.json());
+// Middleware to parse JSON data
+app.use(jsonParser);
+
+// Middleware to parse URL-encoded form data
+app.use(urlEncodedParser);
 
 // Use CORS middleware
-app.use(cors());
+app.use(corsMiddleware);
 // Use routes
 app.use('/api/user', userRouter);
 app.use('/api/teachers', teacherRouter);
