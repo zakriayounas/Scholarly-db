@@ -42,6 +42,14 @@ const teacherSchema = new mongoose.Schema(
             type: Date,
             required: true,
         },
+        is_specialized: {
+            type: Boolean,
+            default: false,
+        },
+        specialized_subjects: {
+            type: [String],
+            default: [],
+        },
         university: {
             type: String,
             required: true,

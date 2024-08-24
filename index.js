@@ -6,6 +6,8 @@ import teacherRouter from './routes/teacherRoutes.js';
 import studentRouter from './routes/studentRoutes.js';
 import cors from "cors"
 import { corsMiddleware, jsonParser, urlEncodedParser } from './middlewares/middlewares.js';
+import eventRouter from './routes/eventRoutes.js';
+import scheduleRouter from './routes/scheduleRoutes.js';
 // Load environment variables
 dotenv.config();
 
@@ -26,6 +28,8 @@ app.use(corsMiddleware);
 app.use('/api/user', userRouter);
 app.use('/api/teachers', teacherRouter);
 app.use('/api/students', studentRouter);
+app.use('/api/events', eventRouter);
+app.use('/api/schedules', scheduleRouter);
 // Home route
 app.get('/', (req, res) => {
     res.send('API is running...');

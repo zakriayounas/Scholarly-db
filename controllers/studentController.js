@@ -2,13 +2,23 @@ import mongoose from "mongoose";
 import Student from "../models/studentModel.js";
 import { getRandomColor } from "../utils/helper.js"
 export const getAllStudents = async (req, res) => {
-    const { page = 1, student_first_name, order_by } = req.query;
+    const { page = 1, student_first_name, sort_by } = req.query;
     const students_per_page = 15;
     const skipStudents = students_per_page * (page - 1);
 
     let query = {};
     if (student_first_name) {
         query.student_first_name = new RegExp(student_first_name, "i");
+    }
+    let sortBy = {};
+    if (sort_by) {
+        if (sort_by === "newest") {
+            sortBy.createdAt = -1;
+        } else if (sort_by === "updatedAt") {
+            sortBy.updatedAt = -1;
+        } else if (sort_by === "alphabetically") {
+            sortBy.student_first_name = 1;
+        }
     }
     const totalStudents = await Student.countDocuments(query);
     const lastPage = Math.ceil(totalStudents / students_per_page);
@@ -17,7 +27,7 @@ export const getAllStudents = async (req, res) => {
         const studentsList = await Student.find(query)
             .limit(students_per_page)
             .skip(skipStudents)
-            .sort(order_by);
+            .sort(sortBy);
         res.status(200).json({
             students: studentsList,
             per_page: students_per_page,
