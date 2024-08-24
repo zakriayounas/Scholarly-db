@@ -4,6 +4,7 @@ import connectDB from './database/connect.js';
 import userRouter from "./routes/userRoutes.js"
 import teacherRouter from './routes/teacherRoutes.js';
 import studentRouter from './routes/studentRoutes.js';
+import cors from "cors"
 // Load environment variables
 dotenv.config();
 
@@ -15,6 +16,8 @@ const app = express();
 // Body parser middleware
 app.use(express.json());
 
+// Use CORS middleware
+app.use(cors());
 // Use routes
 app.use('/api/user', userRouter);
 app.use('/api/teachers', teacherRouter);
