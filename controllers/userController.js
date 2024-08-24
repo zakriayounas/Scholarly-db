@@ -25,12 +25,15 @@ export const registerNewUser = async (req, res) => {
         });
 
         const savedUser = await newUser.save();
-        res.status(201).json({
-            id: savedUser._id,
-            name: savedUser.name,
-            email: savedUser.email,
-            profile_color: savedUser.profile_color
-        });
+        res.status(201).json(
+            {
+                message: "User register successfully!", user: {
+                    id: savedUser._id,
+                    name: savedUser.name,
+                    email: savedUser.email,
+                    profile_color: savedUser.profile_color
+                }
+            });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -58,6 +61,7 @@ export const loginUser = async (req, res) => {
             { expiresIn: '1h' }
         );
         res.status(200).json({
+            message: "Logged in successfully!",
             user: {
                 id: user._id,
                 email: user.email,
