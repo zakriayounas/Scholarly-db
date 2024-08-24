@@ -1,16 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
-
-const getRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-};
-
+import { getRandomColor } from "../utils/helper.js";
 export const registerNewUser = async (req, res) => {
     const { name, email, password, confirm_password } = req.body;
 

@@ -1,8 +1,9 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './database/connect.js';
-import userRoutes from './routes/userRoutes.js';
-
+import userRouter from "./routes/userRoutes.js"
+import teacherRouter from './routes/teacherRoutes.js';
+import studentRouter from './routes/studentRoutes.js';
 // Load environment variables
 dotenv.config();
 
@@ -15,8 +16,9 @@ const app = express();
 app.use(express.json());
 
 // Use routes
-app.use('/api/user', userRoutes);
-
+app.use('/api/user', userRouter);
+app.use('/api/teachers', teacherRouter);
+app.use('/api/students', studentRouter);
 // Home route
 app.get('/', (req, res) => {
     res.send('API is running...');
