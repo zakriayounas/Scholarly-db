@@ -15,6 +15,7 @@ const eventSchema = new mongoose.Schema(
             type: String,
             required: true,
             trim: true,
+            maxlength: 200,
         },
         event_start_date: {
             type: Date,
@@ -31,7 +32,8 @@ const eventSchema = new mongoose.Schema(
         event_location: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
+            maxlength: 200,
         },
         event_type: {
             type: String,
@@ -53,5 +55,5 @@ const eventSchema = new mongoose.Schema(
     }
 );
 
-const Event = mongoose.model("Event", eventSchema);
+const Event = mongoose.model("event", eventSchema);
 export default Event;
