@@ -1,16 +1,23 @@
 import mongoose from "mongoose";
 import Student from "../models/studentModel.js";
-import { getRandomColor } from "../utils/helper.js"
+import { calculateAge, getRandomColor } from "../utils/helper.js"
 export const getAllStudents = async (req, res) => {
-    const { page = 1, student_first_name, sort_by } = req.query;
+    const { page = 1, student_first_name, sort_by, student_classes, age } = req.query;
     const students_per_page = 15;
     const skipStudents = students_per_page * (page - 1);
-
+    let sortBy = {};
     let query = {};
     if (student_first_name) {
         query.student_first_name = new RegExp(student_first_name, "i");
     }
-    let sortBy = {};
+    if (student_classes) {
+        const classesArray = Array.isArray(student_classes) ? student_classes : [student_classes];
+        query.student_class = { $in: classesArray };
+    }
+    if (age) {
+        const ageArray = Array.isArray(age) ? age : [age];
+        query.student_age = { $in: ageArray };
+    }
     if (sort_by) {
         if (sort_by === "newest") {
             sortBy.createdAt = -1;
@@ -58,10 +65,11 @@ export const addNewStudent = async (req, res) => {
             return res.status(400).json({ message: "Student already exists" });
         }
         const profile_color = getRandomColor();
+        const student_age = calculateAge(date_of_birth);
         const newStudent = new Student({
             student_first_name,
             student_last_name,
-            date_of_birth,
+            date_of_birth, student_age,
             student_email,
             student_class,
             address,
@@ -78,6 +86,7 @@ export const addNewStudent = async (req, res) => {
             student_first_name: savedStudent.student_first_name,
             student_last_name: savedStudent.student_last_name,
             date_of_birth: savedStudent.date_of_birth,
+            student_age: savedStudent.student_age,
             student_email: savedStudent.student_email,
             student_class: savedStudent.student_class,
             address: savedStudent.address,
@@ -140,10 +149,11 @@ export const updateStudent = async (req, res) => {
             }
             existingStudent.student_email = student_email;
         }
-
+        const student_age = calculateAge(date_of_birth)
         existingStudent.student_first_name = student_first_name || existingStudent.student_first_name;
         existingStudent.student_last_name = student_last_name || existingStudent.student_last_name;
         existingStudent.date_of_birth = date_of_birth || existingStudent.date_of_birth;
+        existingStudent.student_age = student_age || existingStudent.student_age;
         existingStudent.student_class = student_class || existingStudent.student_class;
         existingStudent.address = address || existingStudent.address;
         existingStudent.parent_first_name = parent_first_name || existingStudent.parent_first_name;
@@ -159,6 +169,7 @@ export const updateStudent = async (req, res) => {
             student_first_name: updatedStudent.student_first_name,
             student_last_name: updatedStudent.student_last_name,
             date_of_birth: updatedStudent.date_of_birth,
+            student_age: updatedStudent.student_age,
             student_email: updatedStudent.student_email,
             student_class: updatedStudent.student_class,
             address: updatedStudent.address,

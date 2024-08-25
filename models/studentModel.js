@@ -16,6 +16,10 @@ const studentSchema = new mongoose.Schema(
             type: Date,
             required: true,
         },
+        student_age: {
+            type: Number,
+            required: true,
+        },
         student_email: {
             type: String,
             required: true,

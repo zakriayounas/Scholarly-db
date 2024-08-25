@@ -5,6 +5,7 @@ export const getAllTeachers = async (req, res) => {
     const { page = 1, first_name, sort_by, teacher_type } = req.query;
     const teachers_per_page = 15;
     const skipTeachers = teachers_per_page * (page - 1);
+    let sortBy = {};
     let query = {};
     if (first_name) {
         query.first_name = new RegExp(first_name, "i");
@@ -14,7 +15,6 @@ export const getAllTeachers = async (req, res) => {
     } else if (teacher_type === "general") {
         query.is_specialized = false;
     }
-    let sortBy = {};
     if (sort_by) {
         if (sort_by === "newest") {
             sortBy.createdAt = -1;

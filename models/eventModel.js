@@ -39,8 +39,16 @@ const eventSchema = new mongoose.Schema(
             type: String,
             required: true,
             enum: {
-                values: ["School-Wide", "Class-Specific", "Cultural", "Sports", "Academic", "Fundraisers"],
+                values: ["School-Wide", "Class-Specific"],
                 message: '{VALUE} is not a valid event type'
+            },
+        },
+        event_category: {
+            type: String,
+            required: true,
+            enum: {
+                values: ["Cultural", "Sports", "Academic", "Fundraisers", "Others"],
+                message: '{VALUE} is not a valid event category'
             },
         },
         class_name: {
