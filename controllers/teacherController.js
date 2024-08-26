@@ -56,7 +56,7 @@ export const addNewTeacher = async (req, res) => {
         degree,
         degree_start_date,
         degree_end_date,
-        city,
+        city
     } = req.body;
 
     try {
@@ -65,6 +65,7 @@ export const addNewTeacher = async (req, res) => {
             return res.status(400).json({ message: "Teacher already exists" });
         }
         const profile_color = getRandomColor();
+        const teacher_status = "active";
         const newTeacher = new Teacher({
             first_name,
             last_name,
@@ -78,7 +79,7 @@ export const addNewTeacher = async (req, res) => {
             degree,
             degree_start_date,
             degree_end_date,
-            city,
+            city, teacher_status,
             profile_color,
         });
         const savedTeacher = await newTeacher.save();
@@ -98,6 +99,7 @@ export const addNewTeacher = async (req, res) => {
             degree_start_date: savedTeacher.degree_start_date,
             degree_end_date: savedTeacher.degree_end_date,
             city: savedTeacher.city,
+            teacher_status: savedTeacher.teacher_status,
             profile_color: savedTeacher.profile_color,
         });
     } catch (error) {
@@ -142,6 +144,7 @@ export const updateTeacher = async (req, res) => {
         degree_start_date,
         degree_end_date,
         city,
+        teacher_status
     } = req.body;
 
     try {
@@ -176,6 +179,7 @@ export const updateTeacher = async (req, res) => {
         existingTeacher.degree_end_date =
             degree_end_date || existingTeacher.degree_end_date;
         existingTeacher.city = city || existingTeacher.city;
+        existingTeacher.teacher_status = teacher_status || existingTeacher.teacher_status;
         const updatedTeacher = await existingTeacher.save();
 
         res.status(200).json({
@@ -193,26 +197,46 @@ export const updateTeacher = async (req, res) => {
             degree_start_date: updatedTeacher.degree_start_date,
             degree_end_date: updatedTeacher.degree_end_date,
             city: updatedTeacher.city,
+            teacher_status: updatedTeacher.teacher_status,
             profile_color: updatedTeacher.profile_color,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-export const removeTeacher = async (req, res) => {
-    const { id: teacherId } = req.params;
+export const updateTeacherStatus = async (req, res) => {
+    const { teacher_id: teacherId, teacher_status } = req.body;
+
     if (!mongoose.Types.ObjectId.isValid(teacherId)) {
         return res.status(400).json({ message: "Invalid Teacher ID" });
     }
     try {
-        const existingTeacher = await Teacher.findByIdAndDelete(teacherId);
+        const existingTeacher = await Teacher.findById(teacherId);
         if (!existingTeacher) {
             return res.status(404).json({ message: "Teacher not found" });
         }
-        return res.status(200).json({ message: "Teacher deleted successfully!" });
+        existingTeacher.teacher_status = teacher_status || existingTeacher.teacher_status;
+        const updatedTeacher = await existingTeacher.save();
+
+        res.status(200).json({
+            id: updatedTeacher._id,
+            first_name: updatedTeacher.first_name,
+            last_name: updatedTeacher.last_name,
+            email: updatedTeacher.email,
+            phone: updatedTeacher.phone,
+            address: updatedTeacher.address,
+            date_of_birth: updatedTeacher.date_of_birth,
+            is_specialized: updatedTeacher.is_specialized,
+            specialized_subjects: updatedTeacher.specialized_subjects,
+            university: updatedTeacher.university,
+            degree: updatedTeacher.degree,
+            degree_start_date: updatedTeacher.degree_start_date,
+            degree_end_date: updatedTeacher.degree_end_date,
+            city: updatedTeacher.city,
+            teacher_status: updatedTeacher.teacher_status,
+            profile_color: updatedTeacher.profile_color,
+        });
     } catch (error) {
-        return res
-            .status(500)
-            .json({ message: "An error occurred while deleting the Teacher" });
+        res.status(500).json({ message: error.message });
     }
 };

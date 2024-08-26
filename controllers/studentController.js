@@ -66,12 +66,14 @@ export const addNewStudent = async (req, res) => {
         }
         const profile_color = getRandomColor();
         const student_age = calculateAge(date_of_birth);
+        const student_status = "active";
         const newStudent = new Student({
             student_first_name,
             student_last_name,
             date_of_birth, student_age,
             student_email,
             student_class,
+            student_status,
             address,
             parent_first_name,
             parent_last_name,
@@ -89,6 +91,7 @@ export const addNewStudent = async (req, res) => {
             student_age: savedStudent.student_age,
             student_email: savedStudent.student_email,
             student_class: savedStudent.student_class,
+            student_status: savedStudent.student_status,
             address: savedStudent.address,
             parent_first_name: savedStudent.parent_first_name,
             parent_last_name: savedStudent.parent_last_name,
@@ -129,6 +132,7 @@ export const updateStudent = async (req, res) => {
         date_of_birth,
         student_email,
         student_class,
+        student_status,
         address,
         parent_first_name,
         parent_last_name,
@@ -155,6 +159,7 @@ export const updateStudent = async (req, res) => {
         existingStudent.date_of_birth = date_of_birth || existingStudent.date_of_birth;
         existingStudent.student_age = student_age || existingStudent.student_age;
         existingStudent.student_class = student_class || existingStudent.student_class;
+        existingStudent.student_status = student_status || existingStudent.student_status;
         existingStudent.address = address || existingStudent.address;
         existingStudent.parent_first_name = parent_first_name || existingStudent.parent_first_name;
         existingStudent.parent_last_name = parent_last_name || existingStudent.parent_last_name;
@@ -172,6 +177,7 @@ export const updateStudent = async (req, res) => {
             student_age: updatedStudent.student_age,
             student_email: updatedStudent.student_email,
             student_class: updatedStudent.student_class,
+            student_status: updatedStudent.student_status,
             address: updatedStudent.address,
             parent_first_name: updatedStudent.parent_first_name,
             parent_last_name: updatedStudent.parent_last_name,
@@ -184,18 +190,37 @@ export const updateStudent = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-export const removeStudent = async (req, res) => {
-    const { id: studentId } = req.params;
+export const updateStudentStatus = async (req, res) => {
+    const { student_id: studentId, student_status } = req.body;
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
         return res.status(400).json({ message: "Invalid student ID" });
     }
     try {
-        const existingStudent = await Student.findByIdAndDelete(studentId);
+        const existingStudent = await Student.findById(studentId);
         if (!existingStudent) {
             return res.status(404).json({ message: "Student not found" });
         }
-        return res.status(200).json({ message: "Student deleted successfully!" });
+        existingStudent.student_status = student_status || existingStudent.student_status;
+        const updatedStudent = await existingStudent.save();
+
+        res.status(200).json({
+            id: updatedStudent._id,
+            student_first_name: updatedStudent.student_first_name,
+            student_last_name: updatedStudent.student_last_name,
+            date_of_birth: updatedStudent.date_of_birth,
+            student_age: updatedStudent.student_age,
+            student_email: updatedStudent.student_email,
+            student_class: updatedStudent.student_class,
+            student_status: updatedStudent.student_status,
+            address: updatedStudent.address,
+            parent_first_name: updatedStudent.parent_first_name,
+            parent_last_name: updatedStudent.parent_last_name,
+            phone: updatedStudent.phone,
+            parent_email: updatedStudent.parent_email,
+            payment: updatedStudent.payment,
+            profile_color: updatedStudent.profile_color,
+        });
     } catch (error) {
-        return res.status(500).json({ message: "An error occurred while deleting the student" });
+        res.status(500).json({ message: error.message });
     }
 };

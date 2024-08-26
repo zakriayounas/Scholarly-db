@@ -36,6 +36,12 @@ const studentSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        student_status: {
+            type: String,
+            required: true,
+            default: "active",
+            enum: ["active", "suspended", "left", "completed"],
+        },
         address: {
             type: String,
             required: true,

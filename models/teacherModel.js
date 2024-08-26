@@ -70,6 +70,12 @@ const teacherSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        teacher_status: {
+            type: String,
+            required: true,
+            default: "active",
+            enum: ["active", "suspended", "left"]
+        },
         profile_color: {
             type: String,
             required: true,
