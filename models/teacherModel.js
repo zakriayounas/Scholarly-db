@@ -80,6 +80,16 @@ const teacherSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        school_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'School',
+            required: true
+        },
+        sc_join_id: {
+            type: Number,
+            required: true,
+            unique: true
+        },
     },
     {
         timestamps: true,

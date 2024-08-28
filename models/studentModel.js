@@ -40,7 +40,7 @@ const studentSchema = new mongoose.Schema(
             type: String,
             required: true,
             default: "active",
-            enum: ["active", "suspended", "left", "completed"],
+            enum: ["active", "suspended", "left", "graduated"],
         },
         address: {
             type: String,
@@ -85,6 +85,16 @@ const studentSchema = new mongoose.Schema(
         profile_color: {
             type: String,
             required: true,
+        },
+        school_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "School",
+            required: true,
+        },
+        sc_enroll_id: {
+            type: Number,
+            required: true,
+            unique: true
         },
     },
     {

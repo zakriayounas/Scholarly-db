@@ -40,7 +40,7 @@ const eventSchema = new mongoose.Schema(
             required: true,
             enum: {
                 values: ["School-Wide", "Class-Specific"],
-                message: '{VALUE} is not a valid event type'
+                message: "{VALUE} is not a valid event type",
             },
         },
         event_category: {
@@ -48,14 +48,19 @@ const eventSchema = new mongoose.Schema(
             required: true,
             enum: {
                 values: ["Cultural", "Sports", "Academic", "Fundraisers", "Others"],
-                message: '{VALUE} is not a valid event category'
+                message: "{VALUE} is not a valid event category",
             },
         },
         class_name: {
             type: String,
             required: function () {
-                return this.event_type === 'Class-Specific';
+                return this.event_type === "Class-Specific";
             },
+        },
+        school_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "School",
+            required: true,
         },
     },
     {
