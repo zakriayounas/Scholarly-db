@@ -1,6 +1,9 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
+import dotenv from 'dotenv';
+
+dotenv.config();
 // Middleware to parse JSON data
 export const jsonParser = express.json();
 // Middleware to parse URL-encoded form data
@@ -15,7 +18,7 @@ export const isAuthenticated = (req, res, next) => {
         return res.status(401).json({ message: 'Unauthorized' });
     }
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
         req.user = {
             id: decoded.id,
             email: decoded.email,

@@ -3,8 +3,7 @@ import School from "../models/schoolModel.js";
 import mongoose from "mongoose";
 
 export const validateSchoolAndAdmin = async (req, res) => {
-    const schoolId = req.params.school_id;
-
+    const { school_id: schoolId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(schoolId)) {
         return res.status(400).json({ message: "Invalid school ID" });
     }
@@ -34,4 +33,8 @@ export const getSequenceId = async (schoolId, type) => {
         { new: true, upsert: true } // Create the counter if it doesn't exist
     );
     return counter[updateField];
+};
+// utils/createRouter.js
+export const customRouter = () => {
+    return express.Router({ mergeParams: true });
 };

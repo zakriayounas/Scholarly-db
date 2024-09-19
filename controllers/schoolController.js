@@ -77,7 +77,6 @@ export const addNewSchool = async (req, res) => {
 
 export const viewSchoolDetails = async (req, res) => {
     const { id: schoolId } = req.params;
-
     if (!mongoose.Types.ObjectId.isValid(schoolId)) {
         return res.status(400).json({ message: "Invalid school ID" });
     }

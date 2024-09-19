@@ -1,10 +1,13 @@
-import express from 'express';
 import { addNewEvent, getAllEvents, removeEvent, updateEventDetails, viewEventDetails } from '../controllers/eventController.js';
-const eventRouter = express.Router();
-eventRouter.get('/', getAllEvents);
-eventRouter.post('/add-new-event', addNewEvent);
-eventRouter.get('/view-event-details/:event_id', viewEventDetails);
-eventRouter.post('/update-event/:event_id', updateEventDetails);
-eventRouter.delete('/delete-event/:event_id', removeEvent);
+import { customRouter } from '../controllers/sharedController.js';
+const eventRouter = customRouter()
+
+eventRouter
+    .get('/', getAllEvents)  // GET all events
+    .get('/view-event-details/:event_id', viewEventDetails)  // GET specific event details
+    .post('/add-new-event', addNewEvent)  // POST new event
+    .post('/update-event/:event_id', updateEventDetails)  // POST to update event
+    .delete('/delete-event/:event_id', removeEvent);  // DELETE specific event
+
 
 export default eventRouter;
