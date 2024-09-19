@@ -40,9 +40,7 @@ export const getAllSchools = async (req, res) => {
 
         res.status(200).json({
             schools: schoolsList,
-            current_page: page,
-            total_schools: totalSchools,
-            total_pages: lastPage,
+            total_items: totalSchools,
             per_page: schools_per_page,
             last_page_url,
         });
