@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import Teacher from '../models/teacherModel.js';
 import { getSequenceId, validateSchoolAndAdmin } from './sharedController.js';
-
+import { getRandomColor } from "../utils/helper.js"
 export const getAllTeachers = async (req, res) => {
     const { page = 1, first_name, sort_by, teacher_type } = req.query;
     // Call the validation function
