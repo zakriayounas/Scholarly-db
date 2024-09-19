@@ -1,49 +1,82 @@
-import mongoose from "mongoose";
-import Teacher from "../models/teacherModel.js";
-import { getRandomColor } from "../utils/helper.js";
+import mongoose from 'mongoose';
+import Teacher from '../models/teacherModel.js';
+import { getSequenceId, validateSchoolAndAdmin } from './sharedController.js';
+
 export const getAllTeachers = async (req, res) => {
     const { page = 1, first_name, sort_by, teacher_type } = req.query;
-    const teachers_per_page = 15;
-    const skipTeachers = teachers_per_page * (page - 1);
-    let sortBy = {};
-    let query = {};
-    if (first_name) {
-        query.first_name = new RegExp(first_name, "i");
-    }
-    if (teacher_type === "specialized") {
-        query.is_specialized = true;
-    } else if (teacher_type === "general") {
-        query.is_specialized = false;
-    }
-    if (sort_by) {
-        if (sort_by === "newest") {
-            sortBy.createdAt = -1;
-        } else if (sort_by === "updatedAt") {
-            sortBy.updatedAt = -1;
-        } else if (sort_by === "alphabetically") {
-            sortBy.first_name = 1;
-        }
-    }
-    const totalTeachers = await Teacher.countDocuments(query);
-    const lastPage = Math.ceil(totalTeachers / teachers_per_page);
-    const last_page_url = `/teachers?page=${lastPage}`;
+    // Call the validation function
+    const validationResult = await validateSchoolAndAdmin(req, res);
+    if (validationResult === undefined) return; // If there's an error, exit early
+
+    const { school } = validationResult;
+
     try {
+        // Initialize query and pagination variables
+        const teachers_per_page = 15;
+        const skipTeachers = teachers_per_page * (page - 1);
+        let sortBy = {};
+        let query = { school_id: school._id }; // Ensure school_id is part of the query
+
+        // Apply filters based on query parameters
+        if (first_name) {
+            query.first_name = new RegExp(first_name, "i");
+        }
+        if (teacher_type === "specialized") {
+            query.is_specialized = true;
+        } else if (teacher_type === "general") {
+            query.is_specialized = false;
+        }
+        if (sort_by) {
+            if (sort_by === "newest") {
+                sortBy.createdAt = -1;
+            } else if (sort_by === "updatedAt") {
+                sortBy.updatedAt = -1;
+            } else if (sort_by === "alphabetically") {
+                sortBy.first_name = 1;
+            }
+        }
+
+        // Get total count of teachers
+        const totalTeachers = await Teacher.countDocuments(query);
+        const lastPage = Math.ceil(totalTeachers / teachers_per_page);
+        const last_page_url = `/schools/:school_id/teachers?page=${lastPage}`;
+
+        // Fetch teachers based on the query and pagination
         const teachersList = await Teacher.find(query)
             .select('first_name last_name phone email specialized_subjects is_specialized profile_color')
             .limit(teachers_per_page)
             .skip(skipTeachers)
             .sort(sortBy);
+
         res.status(200).json({
             teachers: teachersList,
             per_page: teachers_per_page,
+            total_items: totalTeachers,
             last_page_url,
+            school: school,
         });
+
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 export const addNewTeacher = async (req, res) => {
-    const {
+    const { first_name, last_name, email, phone, address, date_of_birth, is_specialized, specialized_subjects, university, degree, degree_start_date, degree_end_date, city } = req.body;
+
+    // Call the validation function
+    const validationResult = await validateSchoolAndAdmin(req, res);
+    if (validationResult === undefined) return; // If there's an error, exit early
+
+    const { school } = validationResult;
+
+    const existingTeacher = await Teacher.findOne({ email });
+    if (existingTeacher) {
+        return res.status(400).json({ message: "Teacher already exists" });
+    }
+    const sc_join_id = await getSequenceId(school._id, "teacher")
+    const profile_color = getRandomColor();
+    const teacher_status = "active";
+    const newTeacher = new Teacher({
         first_name,
         last_name,
         email,
@@ -56,58 +89,26 @@ export const addNewTeacher = async (req, res) => {
         degree,
         degree_start_date,
         degree_end_date,
-        city
-    } = req.body;
+        city,
+        teacher_status,
+        profile_color,
+        school_id: school._id,
+        sc_join_id
+    });
+    const savedTeacher = await newTeacher.save();
 
-    try {
-        const existingTeacher = await Teacher.findOne({ email });
-        if (existingTeacher) {
-            return res.status(400).json({ message: "Teacher already exists" });
-        }
-        const profile_color = getRandomColor();
-        const teacher_status = "active";
-        const newTeacher = new Teacher({
-            first_name,
-            last_name,
-            email,
-            phone,
-            address,
-            date_of_birth,
-            is_specialized,
-            specialized_subjects,
-            university,
-            degree,
-            degree_start_date,
-            degree_end_date,
-            city, teacher_status,
-            profile_color,
-        });
-        const savedTeacher = await newTeacher.save();
-
-        res.status(201).json({
-            id: savedTeacher._id,
-            first_name: savedTeacher.first_name,
-            last_name: savedTeacher.last_name,
-            email: savedTeacher.email,
-            phone: savedTeacher.phone,
-            address: savedTeacher.address,
-            date_of_birth: savedTeacher.date_of_birth,
-            is_specialized: savedTeacher.is_specialized,
-            specialized_subjects: savedTeacher.specialized_subjects,
-            university: savedTeacher.university,
-            degree: savedTeacher.degree,
-            degree_start_date: savedTeacher.degree_start_date,
-            degree_end_date: savedTeacher.degree_end_date,
-            city: savedTeacher.city,
-            teacher_status: savedTeacher.teacher_status,
-            profile_color: savedTeacher.profile_color,
-        });
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+    res.status(201).json({
+        message: "Teacher added successfully!",
+        teacher: savedTeacher
+    });
 };
 export const viewTeacherDetails = async (req, res) => {
-    const { id: teacherId } = req.params;
+    const { teacher_id: teacherId } = req.params;
+    const validationResult = await validateSchoolAndAdmin(req, res);
+    if (validationResult === undefined) return; // If there's an error, exit early
+
+    const { school } = validationResult;
+
     if (!mongoose.Types.ObjectId.isValid(teacherId)) {
         return res.status(400).json({ message: "Invalid teacher ID" });
     }
@@ -118,6 +119,7 @@ export const viewTeacherDetails = async (req, res) => {
         }
         res.status(200).json({
             teacher_details: teacher,
+            school: school
         });
     } catch (error) {
         res
@@ -125,8 +127,13 @@ export const viewTeacherDetails = async (req, res) => {
             .json({ message: "An error occurred while retrieving teacher details" });
     }
 };
-export const updateTeacher = async (req, res) => {
-    const { id: teacherId } = req.params;
+export const updateTeacherDetails = async (req, res) => {
+    const { teacher_id: teacherId } = req.params;
+    const validationResult = await validateSchoolAndAdmin(req, res);
+    if (validationResult === undefined) return; // If there's an error, exit early
+
+    const { school } = validationResult;
+
     if (!mongoose.Types.ObjectId.isValid(teacherId)) {
         return res.status(400).json({ message: "Invalid Teacher ID" });
     }
@@ -183,22 +190,8 @@ export const updateTeacher = async (req, res) => {
         const updatedTeacher = await existingTeacher.save();
 
         res.status(200).json({
-            id: updatedTeacher._id,
-            first_name: updatedTeacher.first_name,
-            last_name: updatedTeacher.last_name,
-            email: updatedTeacher.email,
-            phone: updatedTeacher.phone,
-            address: updatedTeacher.address,
-            date_of_birth: updatedTeacher.date_of_birth,
-            is_specialized: updatedTeacher.is_specialized,
-            specialized_subjects: updatedTeacher.specialized_subjects,
-            university: updatedTeacher.university,
-            degree: updatedTeacher.degree,
-            degree_start_date: updatedTeacher.degree_start_date,
-            degree_end_date: updatedTeacher.degree_end_date,
-            city: updatedTeacher.city,
-            teacher_status: updatedTeacher.teacher_status,
-            profile_color: updatedTeacher.profile_color,
+            message: "Teacher updated successfully!",
+            teacher: updatedTeacher
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -206,6 +199,10 @@ export const updateTeacher = async (req, res) => {
 };
 export const updateTeacherStatus = async (req, res) => {
     const { teacher_id: teacherId, teacher_status } = req.body;
+    const validationResult = await validateSchoolAndAdmin(req, res);
+    if (validationResult === undefined) return; // If there's an error, exit early
+
+    const { school } = validationResult;
 
     if (!mongoose.Types.ObjectId.isValid(teacherId)) {
         return res.status(400).json({ message: "Invalid Teacher ID" });
@@ -219,22 +216,8 @@ export const updateTeacherStatus = async (req, res) => {
         const updatedTeacher = await existingTeacher.save();
 
         res.status(200).json({
-            id: updatedTeacher._id,
-            first_name: updatedTeacher.first_name,
-            last_name: updatedTeacher.last_name,
-            email: updatedTeacher.email,
-            phone: updatedTeacher.phone,
-            address: updatedTeacher.address,
-            date_of_birth: updatedTeacher.date_of_birth,
-            is_specialized: updatedTeacher.is_specialized,
-            specialized_subjects: updatedTeacher.specialized_subjects,
-            university: updatedTeacher.university,
-            degree: updatedTeacher.degree,
-            degree_start_date: updatedTeacher.degree_start_date,
-            degree_end_date: updatedTeacher.degree_end_date,
-            city: updatedTeacher.city,
-            teacher_status: updatedTeacher.teacher_status,
-            profile_color: updatedTeacher.profile_color,
+            message: "Teacher status updated successfully!",
+            teacher: updatedTeacher
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

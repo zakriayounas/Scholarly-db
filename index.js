@@ -1,13 +1,12 @@
-import express from 'express';
 import dotenv from 'dotenv';
+import express from 'express';
 import connectDB from './database/connect.js';
-import userRouter from "./routes/userRoutes.js"
-import teacherRouter from './routes/teacherRoutes.js';
-import studentRouter from './routes/studentRoutes.js';
-import cors from "cors"
-import { corsMiddleware, jsonParser, urlEncodedParser } from './middlewares/middlewares.js';
+import { corsMiddleware, isAuthenticated, jsonParser, urlEncodedParser } from './middlewares/middlewares.js';
 import eventRouter from './routes/eventRoutes.js';
-import scheduleRouter from './routes/scheduleRoutes.js';
+import schoolRouter from './routes/schoolRoutes.js';
+import studentRouter from './routes/studentRoutes.js';
+import teacherRouter from './routes/teacherRoutes.js';
+import userRouter from "./routes/userRoutes.js";
 // Load environment variables
 dotenv.config();
 
@@ -24,12 +23,15 @@ app.use(urlEncodedParser);
 
 // Use CORS middleware
 app.use(corsMiddleware);
+// Middleware for user admin 
+app.use('/api/schools/', isAuthenticated);
 // Use routes
 app.use('/api/user', userRouter);
-app.use('/api/teachers', teacherRouter);
-app.use('/api/students', studentRouter);
-app.use('/api/events', eventRouter);
-app.use('/api/schedules', scheduleRouter);
+app.use('/api/schools', schoolRouter);
+app.use('/api/schools/:school_id/teachers', teacherRouter);
+app.use('/api/schools/:school_id/students', studentRouter);
+app.use('/api/schools/:school_id/events', eventRouter);
+// app.use('/api/schools/schedules', scheduleRouter);
 // Home route
 app.get('/', (req, res) => {
     res.send('API is running...');

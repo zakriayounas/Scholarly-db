@@ -1,12 +1,17 @@
 import mongoose from "mongoose";
 import Student from "../models/studentModel.js";
 import { calculateAge, getRandomColor } from "../utils/helper.js"
+import { getSequenceId, validateSchoolAndAdmin } from "./sharedController.js";
 export const getAllStudents = async (req, res) => {
     const { page = 1, student_first_name, sort_by, student_classes, age } = req.query;
+    const validationResult = await validateSchoolAndAdmin(req, res);
+    if (validationResult === undefined) return; // If there's an error, exit early
+
+    const { school } = validationResult;
     const students_per_page = 15;
     const skipStudents = students_per_page * (page - 1);
     let sortBy = {};
-    let query = {};
+    let query = { school_id: school._id };
     if (student_first_name) {
         query.student_first_name = new RegExp(student_first_name, "i");
     }
@@ -29,7 +34,7 @@ export const getAllStudents = async (req, res) => {
     }
     const totalStudents = await Student.countDocuments(query);
     const lastPage = Math.ceil(totalStudents / students_per_page);
-    const last_page_url = `/students?page=${lastPage}`;
+    const last_page_url = `/schools/:school_id/students?page=${lastPage}`;
     try {
         const studentsList = await Student.find(query)
             .limit(students_per_page)
@@ -38,7 +43,9 @@ export const getAllStudents = async (req, res) => {
         res.status(200).json({
             students: studentsList,
             per_page: students_per_page,
+            total_items: totalStudents,
             last_page_url,
+            school: school,
         });
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -58,12 +65,16 @@ export const addNewStudent = async (req, res) => {
         parent_email,
         payment,
     } = req.body;
+    const validationResult = await validateSchoolAndAdmin(req, res);
+    if (validationResult === undefined) return; // If there's an error, exit early
 
+    const { school } = validationResult;
     try {
         const existingStudent = await Student.findOne({ student_email });
         if (existingStudent) {
             return res.status(400).json({ message: "Student already exists" });
         }
+        const sc_enroll_id = await getSequenceId(school._id, "student")
         const profile_color = getRandomColor();
         const student_age = calculateAge(date_of_birth);
         const student_status = "active";
@@ -81,31 +92,24 @@ export const addNewStudent = async (req, res) => {
             parent_email,
             payment,
             profile_color,
+            school_id: school._id,
+            sc_enroll_id
         });
         const savedStudent = await newStudent.save();
         res.status(201).json({
-            id: savedStudent._id,
-            student_first_name: savedStudent.student_first_name,
-            student_last_name: savedStudent.student_last_name,
-            date_of_birth: savedStudent.date_of_birth,
-            student_age: savedStudent.student_age,
-            student_email: savedStudent.student_email,
-            student_class: savedStudent.student_class,
-            student_status: savedStudent.student_status,
-            address: savedStudent.address,
-            parent_first_name: savedStudent.parent_first_name,
-            parent_last_name: savedStudent.parent_last_name,
-            phone: savedStudent.phone,
-            parent_email: savedStudent.parent_email,
-            payment: savedStudent.payment,
-            profile_color: savedStudent.profile_color,
+            message: "Student added successfully!",
+            student: savedStudent
         });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 export const viewStudentDetails = async (req, res) => {
-    const { id: studentId } = req.params;
+    const validationResult = await validateSchoolAndAdmin(req, res);
+    if (validationResult === undefined) return; // If there's an error, exit early
+
+    const { school } = validationResult;
+    const { student_id: studentId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
         return res.status(400).json({ message: "Invalid student ID" });
     }
@@ -115,14 +119,19 @@ export const viewStudentDetails = async (req, res) => {
             return res.status(404).json({ message: "Student not found" });
         }
         res.status(200).json({
-            student_details: student
+            student_details: student,
+            school: school
         });
     } catch (error) {
         res.status(500).json({ message: "An error occurred while retrieving student details" });
     }
 };
-export const updateStudent = async (req, res) => {
-    const { id: studentId } = req.params;
+export const updateStudentDetails = async (req, res) => {
+    const validationResult = await validateSchoolAndAdmin(req, res);
+    if (validationResult === undefined) return; // If there's an error, exit early
+
+    const { school } = validationResult;
+    const { student_id: studentId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
         return res.status(400).json({ message: "Invalid student ID" });
     }
@@ -170,21 +179,8 @@ export const updateStudent = async (req, res) => {
         const updatedStudent = await existingStudent.save();
 
         res.status(200).json({
-            id: updatedStudent._id,
-            student_first_name: updatedStudent.student_first_name,
-            student_last_name: updatedStudent.student_last_name,
-            date_of_birth: updatedStudent.date_of_birth,
-            student_age: updatedStudent.student_age,
-            student_email: updatedStudent.student_email,
-            student_class: updatedStudent.student_class,
-            student_status: updatedStudent.student_status,
-            address: updatedStudent.address,
-            parent_first_name: updatedStudent.parent_first_name,
-            parent_last_name: updatedStudent.parent_last_name,
-            phone: updatedStudent.phone,
-            parent_email: updatedStudent.parent_email,
-            payment: updatedStudent.payment,
-            profile_color: updatedStudent.profile_color,
+            message: "Student updated successfully!",
+            student: updatedStudent,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -192,6 +188,10 @@ export const updateStudent = async (req, res) => {
 };
 export const updateStudentStatus = async (req, res) => {
     const { student_id: studentId, student_status } = req.body;
+    const validationResult = await validateSchoolAndAdmin(req, res);
+    if (validationResult === undefined) return; // If there's an error, exit early
+
+    const { school } = validationResult;
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
         return res.status(400).json({ message: "Invalid student ID" });
     }
@@ -202,23 +202,9 @@ export const updateStudentStatus = async (req, res) => {
         }
         existingStudent.student_status = student_status || existingStudent.student_status;
         const updatedStudent = await existingStudent.save();
-
         res.status(200).json({
-            id: updatedStudent._id,
-            student_first_name: updatedStudent.student_first_name,
-            student_last_name: updatedStudent.student_last_name,
-            date_of_birth: updatedStudent.date_of_birth,
-            student_age: updatedStudent.student_age,
-            student_email: updatedStudent.student_email,
-            student_class: updatedStudent.student_class,
-            student_status: updatedStudent.student_status,
-            address: updatedStudent.address,
-            parent_first_name: updatedStudent.parent_first_name,
-            parent_last_name: updatedStudent.parent_last_name,
-            phone: updatedStudent.phone,
-            parent_email: updatedStudent.parent_email,
-            payment: updatedStudent.payment,
-            profile_color: updatedStudent.profile_color,
+            message: "Student status updated successfully!",
+            student: updatedStudent,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
