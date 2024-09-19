@@ -29,7 +29,7 @@ export const getAllTeachers = async (req, res) => {
     const last_page_url = `/teachers?page=${lastPage}`;
     try {
         const teachersList = await Teacher.find(query)
-            .select('first_name last_name phone email specialized_subjects is_specialized')
+            .select('first_name last_name phone email specialized_subjects is_specialized profile_color')
             .limit(teachers_per_page)
             .skip(skipTeachers)
             .sort(sortBy);
