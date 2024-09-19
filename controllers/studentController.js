@@ -43,6 +43,7 @@ export const getAllStudents = async (req, res) => {
         res.status(200).json({
             students: studentsList,
             per_page: students_per_page,
+            total_items: totalStudents,
             last_page_url,
             school: school,
         });

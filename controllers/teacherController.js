@@ -51,6 +51,7 @@ export const getAllTeachers = async (req, res) => {
         res.status(200).json({
             teachers: teachersList,
             per_page: teachers_per_page,
+            total_items: totalTeachers,
             last_page_url,
             school: school,
         });

@@ -76,6 +76,7 @@ export const getAllEvents = async (req, res) => {
         res.status(200).json({
             events: eventsList,
             per_page: events_per_page,
+            total_items: totalEvents,
             last_page_url,
             school: school
         });
