@@ -1,6 +1,7 @@
 import Counter from "../models/counterModel.js";
 import School from "../models/schoolModel.js";
 import mongoose from "mongoose";
+import express from 'express';
 
 export const validateSchoolAndAdmin = async (req, res) => {
     const { school_id: schoolId } = req.params;
