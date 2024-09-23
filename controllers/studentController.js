@@ -34,7 +34,7 @@ export const getAllStudents = async (req, res) => {
     }
     const totalStudents = await Student.countDocuments(query);
     const lastPage = Math.ceil(totalStudents / students_per_page);
-    const last_page_url = `/schools/:school_id/students?page=${lastPage}`;
+    const last_page_url = `/schools/${school._id}/students?page=${lastPage}`;
     try {
         const studentsList = await Student.find(query)
             .limit(students_per_page)
@@ -58,10 +58,13 @@ export const addNewStudent = async (req, res) => {
         date_of_birth,
         student_email,
         student_class,
+        student_phone,
+        student_gender,
+        profile_image,
         address,
         parent_first_name,
         parent_last_name,
-        phone,
+        parent_phone,
         parent_email,
         payment,
     } = req.body;
@@ -88,10 +91,13 @@ export const addNewStudent = async (req, res) => {
             address,
             parent_first_name,
             parent_last_name,
-            phone,
+            parent_phone,
             parent_email,
             payment,
             profile_color,
+            student_phone,
+            student_gender,
+            profile_image,
             school_id: school._id,
             sc_enroll_id
         });
@@ -129,8 +135,6 @@ export const viewStudentDetails = async (req, res) => {
 export const updateStudentDetails = async (req, res) => {
     const validationResult = await validateSchoolAndAdmin(req, res);
     if (validationResult === undefined) return; // If there's an error, exit early
-
-    const { school } = validationResult;
     const { student_id: studentId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
         return res.status(400).json({ message: "Invalid student ID" });
@@ -142,10 +146,13 @@ export const updateStudentDetails = async (req, res) => {
         student_email,
         student_class,
         student_status,
+        student_phone,
+        student_gender,
+        profile_image,
         address,
         parent_first_name,
         parent_last_name,
-        phone,
+        parent_phone,
         parent_email,
         payment,
     } = req.body;
@@ -169,10 +176,13 @@ export const updateStudentDetails = async (req, res) => {
         existingStudent.student_age = student_age || existingStudent.student_age;
         existingStudent.student_class = student_class || existingStudent.student_class;
         existingStudent.student_status = student_status || existingStudent.student_status;
+        existingStudent.student_gender = student_gender || existingStudent.student_gender;
+        existingStudent.student_phone = student_phone || existingStudent.student_phone;
+        existingStudent.profile_image = profile_image || existingStudent.profile_image;
         existingStudent.address = address || existingStudent.address;
         existingStudent.parent_first_name = parent_first_name || existingStudent.parent_first_name;
         existingStudent.parent_last_name = parent_last_name || existingStudent.parent_last_name;
-        existingStudent.phone = phone || existingStudent.phone;
+        existingStudent.parent_phone = parent_phone || existingStudent.parent_phone;
         existingStudent.parent_email = parent_email || existingStudent.parent_email;
         existingStudent.payment = payment || existingStudent.payment;
 

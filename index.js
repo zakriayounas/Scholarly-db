@@ -7,6 +7,7 @@ import schoolRouter from './routes/schoolRoutes.js';
 import studentRouter from './routes/studentRoutes.js';
 import teacherRouter from './routes/teacherRoutes.js';
 import userRouter from "./routes/userRoutes.js";
+import draftRouter from './routes/draftRoutes.js';
 // Load environment variables
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/schools', schoolRouter);
 app.use('/api/schools/:school_id/teachers', teacherRouter);
 app.use('/api/schools/:school_id/students', studentRouter);
 app.use('/api/schools/:school_id/events', eventRouter);
+app.use('/api/schools/:school_id/drafts', draftRouter);
 // app.use('/api/schools/schedules', scheduleRouter);
 // Home route
 app.get('/', (req, res) => {

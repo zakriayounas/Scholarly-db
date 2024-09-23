@@ -67,7 +67,7 @@ export const getAllEvents = async (req, res) => {
     }
     const totalEvents = await Event.countDocuments(query);
     const lastPage = Math.ceil(totalEvents / events_per_page);
-    const last_page_url = `/schools/:school_id/events?page=${lastPage}`;
+    const last_page_url = `/schools/${school._id}/events?page=${lastPage}`;
     try {
         const eventsList = await Event.find(query)
             .limit(events_per_page)

@@ -39,7 +39,7 @@ export const getAllTeachers = async (req, res) => {
         // Get total count of teachers
         const totalTeachers = await Teacher.countDocuments(query);
         const lastPage = Math.ceil(totalTeachers / teachers_per_page);
-        const last_page_url = `/schools/:school_id/teachers?page=${lastPage}`;
+        const last_page_url = `/schools/${school._id}/teachers?page=${lastPage}`;
 
         // Fetch teachers based on the query and pagination
         const teachersList = await Teacher.find(query)
@@ -61,7 +61,7 @@ export const getAllTeachers = async (req, res) => {
     }
 };
 export const addNewTeacher = async (req, res) => {
-    const { first_name, last_name, email, phone, address, date_of_birth, is_specialized, specialized_subjects, university, degree, degree_start_date, degree_end_date, city } = req.body;
+    const { first_name, last_name, email, phone, address, date_of_birth, is_specialized, specialized_subjects, university, degree, degree_start_date, degree_end_date, resident_city, degree_city, gender, profile_image } = req.body;
 
     // Call the validation function
     const validationResult = await validateSchoolAndAdmin(req, res);
@@ -89,9 +89,12 @@ export const addNewTeacher = async (req, res) => {
         degree,
         degree_start_date,
         degree_end_date,
-        city,
+        resident_city,
+        degree_city,
         teacher_status,
         profile_color,
+        profile_image,
+        gender,
         school_id: school._id,
         sc_join_id
     });
@@ -150,8 +153,10 @@ export const updateTeacherDetails = async (req, res) => {
         degree,
         degree_start_date,
         degree_end_date,
-        city,
-        teacher_status
+        resident_city,
+        gender,
+        profile_image,
+        teacher_status, degree_city
     } = req.body;
 
     try {
@@ -185,8 +190,11 @@ export const updateTeacherDetails = async (req, res) => {
             degree_start_date || existingTeacher.degree_start_date;
         existingTeacher.degree_end_date =
             degree_end_date || existingTeacher.degree_end_date;
-        existingTeacher.city = city || existingTeacher.city;
+        existingTeacher.resident_city = resident_city || existingTeacher.resident_city;
+        existingTeacher.degree_city = degree_city || existingTeacher.degree_city;
         existingTeacher.teacher_status = teacher_status || existingTeacher.teacher_status;
+        existingTeacher.gender = gender || existingTeacher.gender;
+        existingTeacher.profile_image = profile_image || existingTeacher.profile_image;
         const updatedTeacher = await existingTeacher.save();
 
         res.status(200).json({

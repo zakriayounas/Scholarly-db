@@ -42,6 +42,19 @@ const teacherSchema = new mongoose.Schema(
             type: Date,
             required: true,
         },
+        resident_city: {
+            type: String,
+            required: true
+        },
+        profile_image: {
+            type: String,
+            default: ""
+        },
+        gender: {
+            type: String,
+            required: true,
+            enum: ["male", "female", "other"],
+        },
         is_specialized: {
             type: Boolean,
             default: false,
@@ -66,7 +79,7 @@ const teacherSchema = new mongoose.Schema(
             type: Date,
             required: true,
         },
-        city: {
+        degree_city: {
             type: String,
             required: true,
         },

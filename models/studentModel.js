@@ -12,14 +12,6 @@ const studentSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
-        date_of_birth: {
-            type: Date,
-            required: true,
-        },
-        student_age: {
-            type: Number,
-            required: true,
-        },
         student_email: {
             type: String,
             required: true,
@@ -32,6 +24,20 @@ const studentSchema = new mongoose.Schema(
                 message: (props) => `${props.value} is not a valid email!`,
             },
         },
+        student_phone: {
+            type: String,
+            required: true,
+            validate: {
+                validator: function (v) {
+                    return /\d{10}/.test(v);
+                },
+                message: (props) => `${props.value} is not a valid phone number!`,
+            },
+        },
+        date_of_birth: {
+            type: Date,
+            required: true,
+        },
         student_class: {
             type: String,
             required: true,
@@ -41,6 +47,19 @@ const studentSchema = new mongoose.Schema(
             required: true,
             default: "active",
             enum: ["active", "suspended", "left", "graduated"],
+        },
+        student_gender: {
+            type: String,
+            required: true,
+            enum: ["male", "female", "other"],
+        },
+        student_age: {
+            type: Number,
+            required: true,
+        },
+        profile_image: {
+            type: String,
+            default: ""
         },
         address: {
             type: String,
@@ -56,7 +75,7 @@ const studentSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
-        phone: {
+        parent_phone: {
             type: String,
             required: true,
             validate: {
