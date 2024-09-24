@@ -78,7 +78,7 @@ const studentSchema = new mongoose.Schema(
             required: true,
             validate: {
                 validator: function (v) {
-                    return /\d{10}/.test(v);
+                    return /^\d{4}-\d{3}-\d{4}$/.test(v);
                 },
                 message: (props) => `${props.value} is not a valid phone number!`,
             },
