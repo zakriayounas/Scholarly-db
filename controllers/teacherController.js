@@ -61,7 +61,7 @@ export const getAllTeachers = async (req, res) => {
     }
 };
 export const addNewTeacher = async (req, res) => {
-    const { first_name, last_name, email, phone, address, date_of_birth, is_specialized, specialized_subjects, university, degree, degree_start_date, degree_end_date, resident_city, degree_city, gender, profile_image } = req.body;
+    const { first_name, last_name, email, phone, cnic_number, address, gender, is_specialized, specialized_subjects, university, degree, degree_start_date, degree_end_date, degree_city, profile_image } = req.body;
 
     // Call the validation function
     const validationResult = await validateSchoolAndAdmin(req, res);
@@ -82,19 +82,18 @@ export const addNewTeacher = async (req, res) => {
         email,
         phone,
         address,
-        date_of_birth,
+        cnic_number,
+        gender,
         is_specialized,
         specialized_subjects,
         university,
         degree,
         degree_start_date,
         degree_end_date,
-        resident_city,
         degree_city,
         teacher_status,
         profile_color,
         profile_image,
-        gender,
         school_id: school._id,
         sc_join_id
     });
@@ -135,28 +134,27 @@ export const updateTeacherDetails = async (req, res) => {
     const validationResult = await validateSchoolAndAdmin(req, res);
     if (validationResult === undefined) return; // If there's an error, exit early
 
-    const { school } = validationResult;
-
     if (!mongoose.Types.ObjectId.isValid(teacherId)) {
         return res.status(400).json({ message: "Invalid Teacher ID" });
     }
+
     const {
         first_name,
         last_name,
         email,
         phone,
         address,
-        date_of_birth,
+        cnic_number,
+        gender,
         is_specialized,
         specialized_subjects,
         university,
         degree,
         degree_start_date,
         degree_end_date,
-        resident_city,
-        gender,
         profile_image,
-        teacher_status, degree_city
+        teacher_status,
+        degree_city
     } = req.body;
 
     try {
@@ -164,47 +162,54 @@ export const updateTeacherDetails = async (req, res) => {
         if (!existingTeacher) {
             return res.status(404).json({ message: "Teacher not found" });
         }
+
+        // Check for unique email
         if (email && email !== existingTeacher.email) {
             const emailExists = await Teacher.findOne({ email });
             if (emailExists) {
-                return res
-                    .status(400)
-                    .json({ message: "Email already in use by another teacher" });
+                return res.status(400).json({ message: "Email already in use by another teacher" });
             }
-            existingTeacher.email = email;
+            existingTeacher.email = email; // Update email if it is new
         }
 
-        existingTeacher.first_name = first_name || existingTeacher.first_name;
-        existingTeacher.last_name = last_name || existingTeacher.last_name;
-        existingTeacher.phone = phone || existingTeacher.phone;
-        existingTeacher.address = address || existingTeacher.address;
-        existingTeacher.date_of_birth =
-            date_of_birth || existingTeacher.date_of_birth;
-        existingTeacher.is_specialized =
-            is_specialized || existingTeacher.is_specialized;
-        existingTeacher.specialized_subjects =
-            specialized_subjects || existingTeacher.specialized_subjects;
-        existingTeacher.university = university || existingTeacher.university;
-        existingTeacher.degree = degree || existingTeacher.degree;
-        existingTeacher.degree_start_date =
-            degree_start_date || existingTeacher.degree_start_date;
-        existingTeacher.degree_end_date =
-            degree_end_date || existingTeacher.degree_end_date;
-        existingTeacher.resident_city = resident_city || existingTeacher.resident_city;
-        existingTeacher.degree_city = degree_city || existingTeacher.degree_city;
-        existingTeacher.teacher_status = teacher_status || existingTeacher.teacher_status;
-        existingTeacher.gender = gender || existingTeacher.gender;
-        existingTeacher.profile_image = profile_image || existingTeacher.profile_image;
+        // Fields to update
+        const fieldsToUpdate = {
+            first_name,
+            last_name,
+            phone,
+            address,
+            is_specialized,
+            specialized_subjects,
+            university,
+            degree,
+            degree_start_date,
+            degree_end_date,
+            cnic_number,
+            degree_city,
+            teacher_status,
+            gender,
+            profile_image,
+        };
+
+        // Update fields if provided
+        Object.keys(fieldsToUpdate).forEach(field => {
+            if (fieldsToUpdate[field] !== undefined) {
+                existingTeacher[field] = fieldsToUpdate[field];
+            }
+        });
+
+        // Save updated teacher
         const updatedTeacher = await existingTeacher.save();
 
         res.status(200).json({
             message: "Teacher updated successfully!",
-            teacher: updatedTeacher
+            teacher: updatedTeacher,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 export const updateTeacherStatus = async (req, res) => {
     const { teacher_id: teacherId, teacher_status } = req.body;
     const validationResult = await validateSchoolAndAdmin(req, res);

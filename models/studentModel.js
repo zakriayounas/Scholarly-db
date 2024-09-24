@@ -2,56 +2,44 @@ import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema(
     {
-        student_first_name: {
+        first_name: {
             type: String,
             required: true,
             trim: true,
         },
-        student_last_name: {
+        last_name: {
             type: String,
             required: true,
             trim: true,
         },
-        student_email: {
-            type: String,
-            required: true,
-            unique: true,
-            lowercase: true,
-            validate: {
-                validator: function (v) {
-                    return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
-                },
-                message: (props) => `${props.value} is not a valid email!`,
-            },
-        },
-        student_phone: {
+        b_form: {
             type: String,
             required: true,
             validate: {
                 validator: function (v) {
-                    return /\d{10}/.test(v);
+                    return /^\d{5}-\d{7}-\d{1}$/.test(v);
                 },
-                message: (props) => `${props.value} is not a valid phone number!`,
+                message: (props) => `${props.value} is not a valid B-form number!`,
             },
+            unique: true
         },
         date_of_birth: {
             type: Date,
             required: true,
         },
-        student_class: {
+        class_name: {
             type: String,
             required: true,
         },
         student_status: {
             type: String,
-            required: true,
             default: "active",
             enum: ["active", "suspended", "left", "graduated"],
         },
-        student_gender: {
+        gender: {
             type: String,
             required: true,
-            enum: ["male", "female", "other"],
+            enum: ["Male", "Female", "Other"],
         },
         student_age: {
             type: Number,
@@ -75,7 +63,17 @@ const studentSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
-        parent_phone: {
+        cnic_number: {
+            type: String,
+            required: true,
+            validate: {
+                validator: function (v) {
+                    return /^\d{5}-\d{7}-\d{1}$/.test(v);
+                },
+                message: (props) => `${props.value} is not a valid CNIC number!`,
+            },
+        },
+        phone: {
             type: String,
             required: true,
             validate: {
@@ -85,7 +83,7 @@ const studentSchema = new mongoose.Schema(
                 message: (props) => `${props.value} is not a valid phone number!`,
             },
         },
-        parent_email: {
+        email: {
             type: String,
             required: true,
             lowercase: true,
@@ -99,7 +97,7 @@ const studentSchema = new mongoose.Schema(
         payment: {
             type: String,
             enum: ["cash", "card"],
-            required: true,
+            default: "cash"
         },
         profile_color: {
             type: String,

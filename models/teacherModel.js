@@ -29,31 +29,34 @@ const teacherSchema = new mongoose.Schema(
             required: true,
             validate: {
                 validator: function (v) {
-                    return /\d{10}/.test(v);
+                    return /^\d{4}-\d{3}-\d{4}$/.test(v);
                 },
                 message: (props) => `${props.value} is not a valid phone number!`,
             },
+        },
+        cnic_number: {
+            type: String,
+            required: true,
+            validate: {
+                validator: function (v) {
+                    return /^\d{5}-\d{7}-\d{1}$/.test(v);
+                },
+                message: (props) => `${props.value} is not a valid CNIC number!`,
+            },
+            unique: true
         },
         address: {
             type: String,
             required: true,
         },
-        date_of_birth: {
-            type: Date,
-            required: true,
-        },
-        resident_city: {
+        gender: {
             type: String,
-            required: true
+            required: true,
+            enum: ["Male", "Female", "Other"],
         },
         profile_image: {
             type: String,
             default: ""
-        },
-        gender: {
-            type: String,
-            required: true,
-            enum: ["male", "female", "other"],
         },
         is_specialized: {
             type: Boolean,
