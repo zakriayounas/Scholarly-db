@@ -1,17 +1,12 @@
 import mongoose from "mongoose";
-import { validateSchoolAndAdmin } from "./sharedController.js";
 import { Draft } from "../models/draftModel.js";
 
 export const getAllDrafts = async (req, res) => {
     const { page = 1, type } = req.query;
 
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // Early exit on error
-
-    const { school } = validationResult;
+    const school = req.school;
     const draftsPerPage = 5;
     const skipDrafts = draftsPerPage * (page - 1);
-    console.log(type)
     // Base query to fetch drafts for the school
     let query = { school_id: school._id };
 
@@ -44,8 +39,6 @@ export const getAllDrafts = async (req, res) => {
 export const addNewDraft = async (req, res) => {
     const { school_id, data_type, data } = req.body;
 
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // Early exit on error
 
     try {
         const newDraft = new Draft({
@@ -68,9 +61,6 @@ export const addNewDraft = async (req, res) => {
 export const viewDraftDetails = async (req, res) => {
     const { draft_id: draftId } = req.params;
 
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // Early exit on error
-
     if (!mongoose.Types.ObjectId.isValid(draftId)) {
         return res.status(400).json({ message: "Invalid draft ID" });
     }
@@ -91,9 +81,6 @@ export const viewDraftDetails = async (req, res) => {
 // Remove a draft
 export const removeDraft = async (req, res) => {
     const { draft_id: draftId } = req.params;
-
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // Early exit on error
 
     if (!mongoose.Types.ObjectId.isValid(draftId)) {
         return res.status(400).json({ message: "Invalid draft ID" });

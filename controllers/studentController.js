@@ -1,13 +1,11 @@
 import mongoose from "mongoose";
 import Student from "../models/studentModel.js";
-import { calculateAge, getRandomColor } from "../utils/helper.js"
-import { getSequenceId, validateSchoolAndAdmin } from "./sharedController.js";
+import { calculateAge, generateImageUrl, getRandomColor } from "../utils/helper.js";
+import { getSequenceId } from "./sharedController.js";
 export const getAllStudents = async (req, res) => {
     const { page = 1, first_name, sort_by, student_classes, age } = req.query;
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
 
-    const { school } = validationResult;
+    const school = req.school;
     const students_per_page = 15;
     const skipStudents = students_per_page * (page - 1);
     let sortBy = {};
@@ -72,7 +70,6 @@ export const addNewStudent = async (req, res) => {
         date_of_birth,
         class_name,
         gender,
-        profile_image,
         address,
         parent_first_name,
         parent_last_name,
@@ -81,11 +78,8 @@ export const addNewStudent = async (req, res) => {
         cnic_number,
     } = req.body;
 
-    // Validate school and admin
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
+    const school = req.school;
 
-    const { school } = validationResult;
     try {
         // Check for existing student using the unique b_form field
         const existingStudent = await Student.findOne({ b_form });
@@ -97,7 +91,7 @@ export const addNewStudent = async (req, res) => {
         const sc_enroll_id = await getSequenceId(school._id, "student");
         const profile_color = getRandomColor();
         const student_age = calculateAge(date_of_birth);
-
+        const profile_image = req.file ? generateImageUrl(req.file.path) : "";
         // Create a new student
         const newStudent = new Student({
             first_name,
@@ -133,10 +127,9 @@ export const addNewStudent = async (req, res) => {
 };
 
 export const viewStudentDetails = async (req, res) => {
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
 
-    const { school } = validationResult;
+    const school = req.school;
+
     const { student_id: studentId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
         return res.status(400).json({ message: "Invalid student ID" });
@@ -155,8 +148,6 @@ export const viewStudentDetails = async (req, res) => {
     }
 };
 export const updateStudentDetails = async (req, res) => {
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
     const { student_id: studentId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
@@ -171,7 +162,6 @@ export const updateStudentDetails = async (req, res) => {
         class_name,
         student_status,
         gender,
-        profile_image,
         address,
         parent_first_name,
         parent_last_name,
@@ -194,7 +184,7 @@ export const updateStudentDetails = async (req, res) => {
             }
             existingStudent.b_form = b_form;
         }
-
+        const profile_image = req.file ? generateImageUrl(req.file.path) : existingTeacher.profile_image;
         const student_age = calculateAge(date_of_birth);
         const fieldsToUpdate = {
             first_name,
@@ -232,10 +222,7 @@ export const updateStudentDetails = async (req, res) => {
 
 export const updateStudentStatus = async (req, res) => {
     const { student_id: studentId, student_status } = req.body;
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
 
-    const { school } = validationResult;
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
         return res.status(400).json({ message: "Invalid student ID" });
     }

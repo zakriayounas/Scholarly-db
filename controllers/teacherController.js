@@ -1,14 +1,11 @@
 import mongoose from 'mongoose';
 import Teacher from '../models/teacherModel.js';
-import { getSequenceId, validateSchoolAndAdmin } from './sharedController.js';
-import { getRandomColor } from "../utils/helper.js"
+import { generateImageUrl, getRandomColor } from "../utils/helper.js";
+import { getSequenceId } from './sharedController.js';
 export const getAllTeachers = async (req, res) => {
     const { page = 1, first_name, sort_by, teacher_type } = req.query;
-    // Call the validation function
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
 
-    const { school } = validationResult;
+    const school = req.school;
 
     try {
         // Initialize query and pagination variables
@@ -61,21 +58,17 @@ export const getAllTeachers = async (req, res) => {
     }
 };
 export const addNewTeacher = async (req, res) => {
-    const { first_name, last_name, email, phone, cnic_number, address, gender, is_specialized, specialized_subjects, university, degree, degree_start_date, degree_end_date, degree_city, profile_image } = req.body;
+    const { first_name, last_name, email, phone, cnic_number, address, gender, is_specialized, specialized_subjects, university, degree, degree_start_date, degree_end_date, degree_city } = req.body;
 
-    // Call the validation function
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
-
-    const { school } = validationResult;
-
+    const school = req.school;
     const existingTeacher = await Teacher.findOne({ email });
     if (existingTeacher) {
         return res.status(400).json({ message: "Teacher already exists" });
     }
     const sc_join_id = await getSequenceId(school._id, "teacher")
     const profile_color = getRandomColor();
-    const teacher_status = "active";
+    const profile_image = req.file ? generateImageUrl(req.file.path) : "";
+
     const newTeacher = new Teacher({
         first_name,
         last_name,
@@ -91,7 +84,6 @@ export const addNewTeacher = async (req, res) => {
         degree_start_date,
         degree_end_date,
         degree_city,
-        teacher_status,
         profile_color,
         profile_image,
         school_id: school._id,
@@ -106,10 +98,8 @@ export const addNewTeacher = async (req, res) => {
 };
 export const viewTeacherDetails = async (req, res) => {
     const { teacher_id: teacherId } = req.params;
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
 
-    const { school } = validationResult;
+    const school = req.school;
 
     if (!mongoose.Types.ObjectId.isValid(teacherId)) {
         return res.status(400).json({ message: "Invalid teacher ID" });
@@ -131,8 +121,6 @@ export const viewTeacherDetails = async (req, res) => {
 };
 export const updateTeacherDetails = async (req, res) => {
     const { teacher_id: teacherId } = req.params;
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
 
     if (!mongoose.Types.ObjectId.isValid(teacherId)) {
         return res.status(400).json({ message: "Invalid Teacher ID" });
@@ -152,7 +140,6 @@ export const updateTeacherDetails = async (req, res) => {
         degree,
         degree_start_date,
         degree_end_date,
-        profile_image,
         teacher_status,
         degree_city
     } = req.body;
@@ -171,7 +158,7 @@ export const updateTeacherDetails = async (req, res) => {
             }
             existingTeacher.email = email; // Update email if it is new
         }
-
+        const profile_image = req.file ? generateImageUrl(req.file.path) : existingTeacher.profile_image;
         // Fields to update
         const fieldsToUpdate = {
             first_name,
@@ -212,10 +199,6 @@ export const updateTeacherDetails = async (req, res) => {
 
 export const updateTeacherStatus = async (req, res) => {
     const { teacher_id: teacherId, teacher_status } = req.body;
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
-
-    const { school } = validationResult;
 
     if (!mongoose.Types.ObjectId.isValid(teacherId)) {
         return res.status(400).json({ message: "Invalid Teacher ID" });

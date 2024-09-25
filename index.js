@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import connectDB from './database/connect.js';
-import { corsMiddleware, isAuthenticated, jsonParser, urlEncodedParser } from './middlewares/middlewares.js';
+import { corsMiddleware, isAuthenticated, jsonParser, urlEncodedParser, validateSchoolAndAdmin } from './middlewares/middlewares.js';
 import eventRouter from './routes/eventRoutes.js';
 import schoolRouter from './routes/schoolRoutes.js';
 import studentRouter from './routes/studentRoutes.js';
@@ -19,21 +19,26 @@ const app = express();
 // Middleware to parse JSON data
 app.use(jsonParser);
 
+// Serving upload folder for image view
+app.use('/uploads', express.static('uploads'));
+
 // Middleware to parse URL-encoded form data
 app.use(urlEncodedParser);
 
 // Use CORS middleware
 app.use(corsMiddleware);
-// Middleware for user admin 
+
+// Global authentication middleware for school-related routes
 app.use('/api/schools/', isAuthenticated);
+
 // Use routes
 app.use('/api/user', userRouter);
 app.use('/api/schools', schoolRouter);
-app.use('/api/schools/:school_id/teachers', teacherRouter);
-app.use('/api/schools/:school_id/students', studentRouter);
-app.use('/api/schools/:school_id/events', eventRouter);
-app.use('/api/schools/:school_id/drafts', draftRouter);
-// app.use('/api/schools/schedules', scheduleRouter);
+app.use('/api/schools/:school_id/teachers', validateSchoolAndAdmin, teacherRouter);
+app.use('/api/schools/:school_id/students', validateSchoolAndAdmin, studentRouter);
+app.use('/api/schools/:school_id/events', validateSchoolAndAdmin, eventRouter);
+app.use('/api/schools/:school_id/drafts', validateSchoolAndAdmin, draftRouter);
+
 // Home route
 app.get('/', (req, res) => {
     res.send('API is running...');

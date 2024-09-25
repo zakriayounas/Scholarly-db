@@ -1,5 +1,6 @@
-import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import nodemailer from 'nodemailer';
+dotenv.config();
 
 export const getRandomColor = () => {
     const letters = '0123456789ABCDEF';
@@ -22,7 +23,6 @@ export const calculateAge = (dateOfBirth) => {
 }
 
 
-dotenv.config();
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -49,4 +49,12 @@ export const sendWelcomeEmail = async (userEmail, userName) => {
     } catch (error) {
         console.error('Error sending email:', error.message);
     }
+};
+export const generateImageUrl = (file) => {
+    const serverUrl = process.env.SERVER_URL || 'http://localhost:5000';
+
+    // Convert backslashes to forward slashes and ensure there are no leading slashes
+    const imageUrl = `${serverUrl}/${file.replace(/\\/g, '/').replace(/^\/+/, '')}`;
+
+    return imageUrl;
 };

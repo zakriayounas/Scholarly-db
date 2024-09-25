@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import Event from "../models/eventModel.js";
-import { validateSchoolAndAdmin } from "./sharedController.js";
 export const getAllEvents = async (req, res) => {
     const {
         page = 1,
@@ -10,10 +9,9 @@ export const getAllEvents = async (req, res) => {
         event_types,
         event_categories,
     } = req.query;
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
 
-    const { school } = validationResult;
+    const school = req.school;
+
     const events_per_page = 15;
     const skipEvents = events_per_page * (page - 1);
     let query = { school_id: school._id };
@@ -96,10 +94,9 @@ export const addNewEvent = async (req, res) => {
         event_type, event_category,
         class_name,
     } = req.body;
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
 
-    const { school } = validationResult;
+    const school = req.school;
+
     try {
         if (event_type === "Class-Specific" && !class_name) {
             return res
@@ -132,10 +129,8 @@ export const addNewEvent = async (req, res) => {
 
 export const viewEventDetails = async (req, res) => {
     const { event_id: eventId } = req.params;
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
+    const school = req.school;
 
-    const { school } = validationResult;
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
         return res.status(400).json({ message: "Invalid event ID" });
     }
@@ -157,10 +152,7 @@ export const viewEventDetails = async (req, res) => {
 };
 export const updateEventDetails = async (req, res) => {
     const { event_id: eventId } = req.params;
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
 
-    const { school } = validationResult;
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
         return res.status(400).json({ message: "Invalid Event ID" });
     }
@@ -219,10 +211,7 @@ export const updateEventDetails = async (req, res) => {
 };
 export const removeEvent = async (req, res) => {
     const { event_id: eventId } = req.params;
-    const validationResult = await validateSchoolAndAdmin(req, res);
-    if (validationResult === undefined) return; // If there's an error, exit early
 
-    const { school } = validationResult;
     if (!mongoose.Types.ObjectId.isValid(eventId)) {
         return res.status(400).json({ message: "Invalid Event ID" });
     }
