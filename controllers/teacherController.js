@@ -58,32 +58,22 @@ export const getAllTeachers = async (req, res) => {
     }
 };
 export const addNewTeacher = async (req, res) => {
-    const { first_name, last_name, email, phone, cnic_number, address, gender, is_specialized, specialized_subjects, university, degree, degree_start_date, degree_end_date, degree_city } = req.body;
-
+    const { cnic_number, email } = req.body
     const school = req.school;
     const existingTeacher = await Teacher.findOne({ email });
     if (existingTeacher) {
         return res.status(400).json({ message: "Teacher already exists" });
+    }
+    const existingTeacherByCnic = await Teacher.findOne({ cnic_number });
+    if (existingTeacherByCnic) {
+        return res.status(400).json({ message: "Teacher already exists with this CNIC number." });
     }
     const sc_join_id = await getSequenceId(school._id, "teacher")
     const profile_color = getRandomColor();
     const profile_image = req.file ? generateImageUrl(req.file.path) : "";
 
     const newTeacher = new Teacher({
-        first_name,
-        last_name,
-        email,
-        phone,
-        address,
-        cnic_number,
-        gender,
-        is_specialized,
-        specialized_subjects,
-        university,
-        degree,
-        degree_start_date,
-        degree_end_date,
-        degree_city,
+        ...req.body,
         profile_color,
         profile_image,
         school_id: school._id,

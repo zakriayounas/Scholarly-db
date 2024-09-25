@@ -4,17 +4,17 @@ const studentSchema = new mongoose.Schema(
     {
         first_name: {
             type: String,
-            required: true,
+            required: [true, 'First name is required'],
             trim: true,
         },
         last_name: {
             type: String,
-            required: true,
+            required: [true, 'Last name is required'],
             trim: true,
         },
         b_form: {
             type: String,
-            required: true,
+            required: [true, 'B-form number is required'],
             validate: {
                 validator: function (v) {
                     return /^\d{5}-\d{7}-\d{1}$/.test(v);
@@ -25,25 +25,31 @@ const studentSchema = new mongoose.Schema(
         },
         date_of_birth: {
             type: Date,
-            required: true,
+            required: [true, 'Date of birth is required'],
         },
         class_name: {
             type: String,
-            required: true,
+            required: [true, 'Class name is required'],
         },
         student_status: {
             type: String,
             default: "active",
-            enum: ["active", "suspended", "left", "graduated"],
+            enum: {
+                values: ["active", "suspended", "left", "graduated"],
+                message: '{VALUE} is not a valid student status!',
+            },
         },
         gender: {
             type: String,
-            required: true,
-            enum: ["Male", "Female", "Other"],
+            required: [true, 'Gender is required'],
+            enum: {
+                values: ["Male", "Female", "Other"],
+                message: '{VALUE} is not a valid gender!',
+            },
         },
         student_age: {
             type: Number,
-            required: true,
+            required: [true, 'Student age is required'],
         },
         profile_image: {
             type: String,
@@ -51,21 +57,21 @@ const studentSchema = new mongoose.Schema(
         },
         address: {
             type: String,
-            required: true,
+            required: [true, 'Address is required'],
         },
         parent_first_name: {
             type: String,
-            required: true,
+            required: [true, 'Parent first name is required'],
             trim: true,
         },
         parent_last_name: {
             type: String,
-            required: true,
+            required: [true, 'Parent last name is required'],
             trim: true,
         },
         cnic_number: {
             type: String,
-            required: true,
+            required: [true, 'CNIC number is required'],
             validate: {
                 validator: function (v) {
                     return /^\d{5}-\d{7}-\d{1}$/.test(v);
@@ -75,7 +81,7 @@ const studentSchema = new mongoose.Schema(
         },
         phone: {
             type: String,
-            required: true,
+            required: [true, 'Phone number is required'],
             validate: {
                 validator: function (v) {
                     return /^\d{4}-\d{3}-\d{4}$/.test(v);
@@ -85,7 +91,7 @@ const studentSchema = new mongoose.Schema(
         },
         email: {
             type: String,
-            required: true,
+            required: [true, 'Email is required'],
             lowercase: true,
             validate: {
                 validator: function (v) {
@@ -96,21 +102,24 @@ const studentSchema = new mongoose.Schema(
         },
         payment: {
             type: String,
-            enum: ["cash", "card"],
-            default: "cash"
+            enum: {
+                values: ["cash", "card"],
+                default: "cash",
+                message: '{VALUE} is not a valid payment method!',
+            },
         },
         profile_color: {
             type: String,
-            required: true,
+            required: [true, 'Profile color is required'],
         },
         school_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "School",
-            required: true,
+            required: [true, 'School ID is required'],
         },
         sc_enroll_id: {
             type: Number,
-            required: true,
+            required: [true, 'Enrollment ID is required'],
             unique: true
         },
     },
@@ -118,6 +127,20 @@ const studentSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
+// Error handling middleware
+studentSchema.post('save', function (error, doc, next) {
+    if (error) {
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(err => err.message);
+            next(new Error(messages.join(', ')));
+        } else {
+            next(error);
+        }
+    } else {
+        next();
+    }
+});
 
 const Student = mongoose.model("student", studentSchema);
 export default Student;

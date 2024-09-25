@@ -63,19 +63,7 @@ export const getAllStudents = async (req, res) => {
 };
 
 export const addNewStudent = async (req, res) => {
-    const {
-        first_name,
-        last_name,
-        b_form,
-        date_of_birth,
-        class_name,
-        gender,
-        address,
-        parent_first_name,
-        parent_last_name,
-        phone,
-        email,
-        cnic_number,
+    const { b_form, date_of_birth
     } = req.body;
 
     const school = req.school;
@@ -94,29 +82,16 @@ export const addNewStudent = async (req, res) => {
         const profile_image = req.file ? generateImageUrl(req.file.path) : "";
         // Create a new student
         const newStudent = new Student({
-            first_name,
-            last_name,
-            b_form,
-            date_of_birth,
-            class_name,
-            gender,
+            ...req.body,
             student_age,
             profile_image,
-            address,
-            parent_first_name,
-            parent_last_name,
-            cnic_number,
-            phone,
-            email,
             profile_color,
             school_id: school._id,
             sc_enroll_id
         });
 
-        // Save the new student to the database
         const savedStudent = await newStudent.save();
 
-        // Return a success message and the saved student data
         res.status(201).json({
             message: "Student added successfully!",
             student: savedStudent
