@@ -25,7 +25,7 @@ export const calculateAge = (dateOfBirth) => {
 
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: "sandbox.smtp.mailtrap.io",
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -37,10 +37,13 @@ const transporter = nodemailer.createTransport({
 
 export const sendWelcomeEmail = async (userEmail, userName) => {
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: {
+            name: "Scholarly",
+            address: process.env.EMAIL_USER
+        },
         to: userEmail,
         subject: 'Welcome to Our Scholarly!🤌',
-        text: `Hello ${userName},\n\nThank you for signing up to our School Management System. We are excited to have you onboard!\n\nBest regards,\nSchool Management Team`
+        text: `Hello ${userName}!,\n\nThank you for signing up to our School Management System. We are excited to have you onboard!\n\nBest regards,\nSchool Management Team`
     };
 
     try {
