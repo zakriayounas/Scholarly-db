@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { fieldErrorsValidation } from "../middlewares/middlewares";
+import { fieldErrorsValidation } from "../middlewares/middlewares.js";
 
 const teacherSchema = new mongoose.Schema(
     {
@@ -112,6 +112,5 @@ const teacherSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
-teacherSchema.post('save', fieldErrorsValidation)
 const Teacher = mongoose.model("teacher", teacherSchema);
 export default Teacher;

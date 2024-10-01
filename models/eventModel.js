@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { fieldErrorsValidation } from "../middlewares/middlewares";
+import { fieldErrorsValidation } from "../middlewares/middlewares.js";
 const eventSchema = new mongoose.Schema(
     {
         event_name: {

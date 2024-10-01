@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { fieldErrorsValidation } from "../middlewares/middlewares";
 
 const schoolSchema = new mongoose.Schema(
     {
@@ -63,7 +62,5 @@ const schoolSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
-schoolSchema.post('save', fieldErrorsValidation);
-
 const School = mongoose.model("School", schoolSchema);
 export default School;
