@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { fieldErrorsValidation } from "../middlewares/middlewares";
 
 const studentSchema = new mongoose.Schema(
     {
@@ -129,18 +130,7 @@ const studentSchema = new mongoose.Schema(
 );
 
 // Error handling middleware
-studentSchema.post('save', function (error, doc, next) {
-    if (error) {
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(err => err.message);
-            next(new Error(messages.join(', ')));
-        } else {
-            next(error);
-        }
-    } else {
-        next();
-    }
-});
+studentSchema.post('save', fieldErrorsValidation);
 
 const Student = mongoose.model("student", studentSchema);
 export default Student;

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { fieldErrorsValidation } from "../middlewares/middlewares";
 const eventSchema = new mongoose.Schema(
     {
         event_name: {
@@ -7,13 +8,12 @@ const eventSchema = new mongoose.Schema(
             trim: true,
         },
         event_organizer: {
-            type: String,
-            required: true,
-            trim: true,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
         },
         event_description: {
             type: String,
-            required: true,
             trim: true,
             maxlength: 200,
         },
@@ -28,12 +28,6 @@ const eventSchema = new mongoose.Schema(
         event_time: {
             type: String,
             required: true,
-        },
-        event_location: {
-            type: String,
-            required: true,
-            trim: true,
-            maxlength: 200,
         },
         event_type: {
             type: String,
@@ -67,6 +61,6 @@ const eventSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
-
+eventSchema.post('save', fieldErrorsValidation);
 const Event = mongoose.model("event", eventSchema);
 export default Event;

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Student from "../models/studentModel.js";
-import { calculateAge, generateImageUrl, getRandomColor } from "../utils/helper.js";
+import { calculateAge, getRandomColor } from "../utils/helper.js";
 import { getSequenceId } from "./sharedController.js";
 export const getAllStudents = async (req, res) => {
     const { page = 1, first_name, sort_by, student_classes, age } = req.query;
@@ -69,17 +69,11 @@ export const addNewStudent = async (req, res) => {
     const school = req.school;
 
     try {
-        // Check for existing student using the unique b_form field
-        const existingStudent = await Student.findOne({ b_form });
-        if (existingStudent) {
-            return res.status(400).json({ message: "Student already exists with this B-form number" });
-        }
-
         // Generate the student's enrollment ID and other details
         const sc_enroll_id = await getSequenceId(school._id, "student");
         const profile_color = getRandomColor();
         const student_age = calculateAge(date_of_birth);
-        const profile_image = req.file ? generateImageUrl(req.file.path) : "";
+        const profile_image = req.file ? req.file.path : "";
         // Create a new student
         const newStudent = new Student({
             ...req.body,
@@ -159,7 +153,7 @@ export const updateStudentDetails = async (req, res) => {
             }
             existingStudent.b_form = b_form;
         }
-        const profile_image = req.file ? generateImageUrl(req.file.path) : existingTeacher.profile_image;
+        const profile_image = req.file ? req.file.path : existingTeacher.profile_image;
         const student_age = calculateAge(date_of_birth);
         const fieldsToUpdate = {
             first_name,

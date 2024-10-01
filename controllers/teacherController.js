@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import Teacher from '../models/teacherModel.js';
-import { generateImageUrl, getRandomColor } from "../utils/helper.js";
+import { getRandomColor } from "../utils/helper.js";
 import { getSequenceId } from './sharedController.js';
 export const getAllTeachers = async (req, res) => {
     const { page = 1, first_name, sort_by, teacher_type } = req.query;
@@ -70,8 +70,7 @@ export const addNewTeacher = async (req, res) => {
     }
     const sc_join_id = await getSequenceId(school._id, "teacher")
     const profile_color = getRandomColor();
-    const profile_image = req.file ? generateImageUrl(req.file.path) : "";
-
+    const profile_image = req.file ? req.file.path : "";
     const newTeacher = new Teacher({
         ...req.body,
         profile_color,
@@ -148,7 +147,7 @@ export const updateTeacherDetails = async (req, res) => {
             }
             existingTeacher.email = email; // Update email if it is new
         }
-        const profile_image = req.file ? generateImageUrl(req.file.path) : existingTeacher.profile_image;
+        const profile_image = req.file ? req.file.path : existingTeacher.profile_image;
         // Fields to update
         const fieldsToUpdate = {
             first_name,

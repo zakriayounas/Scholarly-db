@@ -82,3 +82,15 @@ export const validateSchoolAndAdmin = async (req, res, next) => {
         return res.status(500).json({ message: "An error occurred while validating school" });
     }
 };
+export const fieldErrorsValidation = (error, doc, next) => {
+    if (error) {
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(err => err.message);
+            next(new Error(messages.join(', ')));
+        } else {
+            next(error);
+        }
+    } else {
+        next();
+    }
+};
