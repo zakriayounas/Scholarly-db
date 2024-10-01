@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { fieldErrorsValidation } from "../middlewares/middlewares";
 
 const schoolSchema = new mongoose.Schema(
     {
