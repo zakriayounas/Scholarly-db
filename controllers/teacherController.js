@@ -40,7 +40,7 @@ export const getAllTeachers = async (req, res) => {
 
         // Fetch teachers based on the query and pagination
         const teachersList = await Teacher.find(query)
-            .select('first_name last_name phone email specialized_subjects is_specialized profile_color')
+            .select('first_name last_name phone email specialized_subjects is_specialized profile_color profile_image')
             .limit(teachers_per_page)
             .skip(skipTeachers)
             .sort(sortBy);
