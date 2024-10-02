@@ -1,53 +1,26 @@
 import mongoose from 'mongoose';
 import Teacher from '../models/teacherModel.js';
 import { getRandomColor } from "../utils/helper.js";
-import { getSequenceId } from './sharedController.js';
+import { getSequenceId, handleFetchQuery } from './sharedController.js';
 export const getAllTeachers = async (req, res) => {
-    const { page = 1, first_name, sort_by, teacher_type } = req.query;
+    const { query, sortBy, school, items_per_page, skip_items } = handleFetchQuery(req);
 
-    const school = req.school;
 
     try {
-        // Initialize query and pagination variables
-        const teachers_per_page = 15;
-        const skipTeachers = teachers_per_page * (page - 1);
-        let sortBy = {};
-        let query = { school_id: school._id }; // Ensure school_id is part of the query
-
-        // Apply filters based on query parameters
-        if (first_name) {
-            query.first_name = new RegExp(first_name, "i");
-        }
-        if (teacher_type === "specialized") {
-            query.is_specialized = true;
-        } else if (teacher_type === "general") {
-            query.is_specialized = false;
-        }
-        if (sort_by) {
-            if (sort_by === "newest") {
-                sortBy.createdAt = -1;
-            } else if (sort_by === "updatedAt") {
-                sortBy.updatedAt = -1;
-            } else if (sort_by === "alphabetically") {
-                sortBy.first_name = 1;
-            }
-        }
-
-        // Get total count of teachers
         const totalTeachers = await Teacher.countDocuments(query);
-        const lastPage = Math.ceil(totalTeachers / teachers_per_page);
+        const lastPage = Math.ceil(totalTeachers / items_per_page);
         const last_page_url = `/schools/${school._id}/teachers?page=${lastPage}`;
 
         // Fetch teachers based on the query and pagination
         const teachersList = await Teacher.find(query)
             .select('first_name last_name phone email specialized_subjects is_specialized profile_color profile_image')
-            .limit(teachers_per_page)
-            .skip(skipTeachers)
+            .limit(items_per_page)
+            .skip(skip_items)
             .sort(sortBy);
 
         res.status(200).json({
             teachers: teachersList,
-            per_page: teachers_per_page,
+            per_page: items_per_page,
             total_items: totalTeachers,
             last_page_url,
             school: school,
@@ -129,7 +102,7 @@ export const updateTeacherDetails = async (req, res) => {
         degree,
         degree_start_date,
         degree_end_date,
-        teacher_status,
+        status,
         degree_city
     } = req.body;
 
@@ -162,7 +135,7 @@ export const updateTeacherDetails = async (req, res) => {
             degree_end_date,
             cnic_number,
             degree_city,
-            teacher_status,
+            status,
             gender,
             profile_image,
         };
@@ -187,7 +160,7 @@ export const updateTeacherDetails = async (req, res) => {
 };
 
 export const updateTeacherStatus = async (req, res) => {
-    const { teacher_id: teacherId, teacher_status } = req.body;
+    const { teacher_id: teacherId, status } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(teacherId)) {
         return res.status(400).json({ message: "Invalid Teacher ID" });
@@ -197,7 +170,7 @@ export const updateTeacherStatus = async (req, res) => {
         if (!existingTeacher) {
             return res.status(404).json({ message: "Teacher not found" });
         }
-        existingTeacher.teacher_status = teacher_status || existingTeacher.teacher_status;
+        existingTeacher.status = status || existingTeacher.status;
         const updatedTeacher = await existingTeacher.save();
 
         res.status(200).json({

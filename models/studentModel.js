@@ -32,7 +32,7 @@ const studentSchema = new mongoose.Schema(
             type: String,
             required: [true, 'Class name is required'],
         },
-        student_status: {
+        status: {
             type: String,
             default: "active",
             enum: {

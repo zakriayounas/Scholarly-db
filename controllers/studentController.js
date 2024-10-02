@@ -1,66 +1,40 @@
 import mongoose from "mongoose";
 import Student from "../models/studentModel.js";
 import { calculateAge, getRandomColor } from "../utils/helper.js";
-import { getSequenceId } from "./sharedController.js";
+import { getSequenceId, handleFetchQuery } from "./sharedController.js";
+
 export const getAllStudents = async (req, res) => {
-    const { page = 1, first_name, sort_by, student_classes, age } = req.query;
-
-    const school = req.school;
-    const students_per_page = 15;
-    const skipStudents = students_per_page * (page - 1);
-    let sortBy = {};
-    let query = { school_id: school._id };
-
-    // Filter by first name
-    if (first_name) {
-        query.first_name = new RegExp(first_name, "i");  // Case-insensitive search
-    }
-
-    // Filter by classes
-    if (student_classes) {
-        const classesArray = Array.isArray(student_classes) ? student_classes : [student_classes];
-        query.class_name = { $in: classesArray };
-    }
-
-    // Filter by age
-    if (age) {
-        const ageArray = Array.isArray(age) ? age : [age];
-        query.student_age = { $in: ageArray };
-    }
-
-    // Sorting logic
-    if (sort_by) {
-        if (sort_by === "newest") {
-            sortBy.createdAt = -1;
-        } else if (sort_by === "updatedAt") {
-            sortBy.updatedAt = -1;
-        } else if (sort_by === "alphabetically") {
-            sortBy.first_name = 1;  // Sort by first_name alphabetically
-        }
-    }
-
-    const totalStudents = await Student.countDocuments(query);
-    const lastPage = Math.ceil(totalStudents / students_per_page);
-    const last_page_url = `/schools/${school._id}/students?page=${lastPage}`;
-
+    // Destructure the values returned by handleFetchQuery
+    const { query, sortBy, school, items_per_page, skip_items } = handleFetchQuery(req);
     try {
+        // Count total number of students matching the query
+        const totalStudents = await Student.countDocuments(query);
+
+        // Calculate the last page
+        const lastPage = Math.ceil(totalStudents / items_per_page);
+        const last_page_url = `/schools/${school._id}/students?page=${lastPage}`;
+
+        // Fetch students from the database with pagination and sorting
         const studentsList = await Student.find(query)
-            .select('-payment -b_form -cnic_number -gender -date_of_birth -student_age -address')
-            .limit(students_per_page)
-            .skip(skipStudents)
+            .select('-payment -b_form -cnic_number -gender -date_of_birth -student_age -address')  // Exclude private fields
+            .limit(items_per_page)
+            .skip(skip_items)
             .sort(sortBy);
 
+        // Return the students data in the response
         res.status(200).json({
             students: studentsList,
-            per_page: students_per_page,
+            per_page: items_per_page,
             total_items: totalStudents,
             last_page_url,
             school: school,
         });
     } catch (error) {
+        // Handle any errors
         res.status(400).json({ message: error.message });
     }
 };
+
 
 export const addNewStudent = async (req, res) => {
     const { b_form, date_of_birth
@@ -129,7 +103,7 @@ export const updateStudentDetails = async (req, res) => {
         date_of_birth,
         b_form,
         class_name,
-        student_status,
+        status,
         gender,
         address,
         parent_first_name,
@@ -160,7 +134,7 @@ export const updateStudentDetails = async (req, res) => {
             last_name,
             date_of_birth,
             class_name,
-            student_status,
+            status,
             gender,
             profile_image,
             address,
@@ -190,7 +164,7 @@ export const updateStudentDetails = async (req, res) => {
 };
 
 export const updateStudentStatus = async (req, res) => {
-    const { student_id: studentId, student_status } = req.body;
+    const { student_id: studentId, status } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
         return res.status(400).json({ message: "Invalid student ID" });
@@ -200,7 +174,7 @@ export const updateStudentStatus = async (req, res) => {
         if (!existingStudent) {
             return res.status(404).json({ message: "Student not found" });
         }
-        existingStudent.student_status = student_status || existingStudent.student_status;
+        existingStudent.status = status || existingStudent.status;
         const updatedStudent = await existingStudent.save();
         res.status(200).json({
             message: "Student status updated successfully!",

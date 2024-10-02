@@ -87,7 +87,7 @@ const teacherSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        teacher_status: {
+        status: {
             type: String,
             required: true,
             default: "active",
