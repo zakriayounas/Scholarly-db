@@ -105,9 +105,9 @@ const studentSchema = new mongoose.Schema(
             type: String,
             enum: {
                 values: ["cash", "card"],
-                default: "cash",
                 message: '{VALUE} is not a valid payment method!',
             },
+            default: "cash",
         },
         profile_color: {
             type: String,

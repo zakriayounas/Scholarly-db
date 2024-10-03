@@ -53,4 +53,35 @@ export const sendWelcomeEmail = async (userEmail, userName) => {
         console.error('Error sending email:', error.message);
     }
 };
-
+export const classesList = [
+    { value: "I A", label: "I A" },
+    { value: "I B", label: "I B" },
+    { value: "I C", label: "I C" },
+    { value: "II A", label: "II A" },
+    { value: "II B", label: "II B" },
+    { value: "II C", label: "II C" },
+    { value: "III A", label: "III A" },
+    { value: "III B", label: "III B" },
+    { value: "III C", label: "III C" },
+    { value: "IV A", label: "IV A" },
+    { value: "IV B", label: "IV B" },
+    { value: "IV C", label: "IV C" },
+    { value: "V A", label: "V A" },
+    { value: "V B", label: "V B" },
+    { value: "V C", label: "V C" },
+    { value: "VI A", label: "VI A" },
+    { value: "VI B", label: "VI B" },
+    { value: "VI C", label: "VI C" },
+    { value: "VII A", label: "VII A" },
+    { value: "VII B", label: "VII B" },
+    { value: "VII C", label: "VII C" },
+    { value: "VIII A", label: "VIII A" },
+    { value: "VIII B", label: "VIII B" },
+    { value: "VIII C", label: "VIII C" },
+    { value: "IX A", label: "IX A" },
+    { value: "IX B", label: "IX B" },
+    { value: "IX C", label: "IX C" },
+    { value: "X A", label: "X A" },
+    { value: "X B", label: "X B" },
+    { value: "X C", label: "X C" },
+];
