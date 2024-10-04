@@ -85,3 +85,16 @@ export const classesList = [
     { value: "X B", label: "X B" },
     { value: "X C", label: "X C" },
 ];
+export const parseQueryArray = (queryParam) => {
+    if (!queryParam) {
+        return []; // Return an empty array if no query parameter is provided
+    }
+
+    // If it's already an array, return as is
+    if (Array.isArray(queryParam)) {
+        return queryParam;
+    }
+
+    // Remove square brackets if they exist and split the string by commas
+    return queryParam.replace(/[\[\]]/g, '').split(',').map(item => item.trim());
+};

@@ -13,7 +13,7 @@ export const getAllTeachers = async (req, res) => {
 
         // Fetch teachers based on the query and pagination
         const teachersList = await Teacher.find(query)
-            .select('first_name last_name phone email specialized_subjects is_specialized profile_color profile_image')
+            .select('-address -cnic_number -university -degree -degree_start_date -degree_end_date -degree_city')
             .limit(items_per_page)
             .skip(skip_items)
             .sort(sortBy);

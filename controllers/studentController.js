@@ -16,7 +16,7 @@ export const getAllStudents = async (req, res) => {
 
         // Fetch students from the database with pagination and sorting
         const studentsList = await Student.find(query)
-            .select('-payment -b_form -cnic_number -gender -date_of_birth -student_age -address')  // Exclude private fields
+            .select('-payment -b_form -cnic_number  -date_of_birth -student_age -address')  // Exclude private fields
             .limit(items_per_page)
             .skip(skip_items)
             .sort(sortBy);

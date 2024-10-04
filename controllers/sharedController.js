@@ -1,5 +1,6 @@
 import express from 'express';
 import Counter from "../models/counterModel.js";
+import { parseQueryArray } from '../utils/helper.js';
 
 // getting enroll_id in school
 export const getSequenceId = async (schoolId, type) => {
@@ -15,66 +16,73 @@ export const getSequenceId = async (schoolId, type) => {
 export const customRouter = () => {
     return express.Router({ mergeParams: true });
 };
+
 export const handleFetchQuery = (req) => {
-    const { page = 1, first_name, sort_by, class_name, age, status, teacher_type } = req.query;
+    const { page = 1, first_name, sort_by, class_name, status, teacher_type, gender } = req.query;
     const school = req.school;
 
-    const items_per_page = 20;
-    const skip_items = items_per_page * (page - 1);
-    let sortBy = {};
-    let query = { school_id: school._id };  // Query includes filtering by school
+    const ITEMS_PER_PAGE = 20;
+    const skipItems = ITEMS_PER_PAGE * (page - 1);  // Pagination logic
 
-    // Filter by first name
-    if (first_name) {
-        query.first_name = new RegExp(first_name, "i");  // Case-insensitive search
-    }
+    let query = { school_id: school._id };  // Initial query includes school filter
+    let sortBy = { createdAt: -1 };  // Sorting object
 
-    // Filter by classes
+    // Helper function for case-insensitive search with RegExp
+    const createRegExpFilter = (field, value) => {
+        if (value) query[field] = new RegExp(value, "i");
+    };
+
+    // Filter by first name (case-insensitive)
+    createRegExpFilter('first_name', first_name);
+
+    // Filter by class names
     if (class_name) {
-        const classesArray = Array.isArray(class_name) ? class_name : [class_name];
-        query.class_name = { $in: classesArray };  // Filter by class
+        const classArray = parseQueryArray(class_name);
+        query.class_name = { $in: classArray.map(cl => cl.trim()) };
     }
 
-    // Filter by Teacher type (for teachers)
-    if (teacher_type === "specialized") {
+    // Filter by gender
+    if (gender) {
+        const genderArray = parseQueryArray(gender);
+        query.gender = { $in: genderArray.map(g => g.trim()) };
+    }
+
+    // Filter by teacher type (specialized/general)
+    if (teacher_type === "Specialized") {
         query.is_specialized = true;
-    } else if (teacher_type === "general") {
+    } else if (teacher_type === "General") {
         query.is_specialized = false;
     }
 
-    // Filter by age
-    if (age) {
-        const ageArray = Array.isArray(age) ? age : [age];
-        query.student_age = { $in: ageArray };  // Filter by age range
-    }
-
-    // Handle multiple sort_by values
+    // Sort by multiple criteria
     if (sort_by) {
-        const sortArray = Array.isArray(sort_by) ? sort_by : [sort_by];
+        const sortArray = parseQueryArray(sort_by);
+        sortBy = {};
+        const sortOptions = {
+            newest: { createdAt: -1 },
+            updatedAt: { updatedAt: -1 },
+            alphabetically: { first_name: 1 }
+        };
 
         sortArray.forEach(sortOption => {
-            if (sortOption === "newest") {
-                sortBy.createdAt = -1;  // Newest first
-            } else if (sortOption === "updatedAt") {
-                sortBy.updatedAt = -1;  // Recently updated first
-            } else if (sortOption === "alphabetically") {
-                sortBy.first_name = 1;  // Sort alphabetically
+            if (sortOptions[sortOption]) {
+                sortBy = { ...sortBy, ...sortOptions[sortOption] };
             }
         });
     }
 
-    // Filter by status (for students)
+    // Filter by student status
     if (status) {
-        const statusArray = Array.isArray(status) ? status : [status];
-        query.status = { $in: statusArray };  // Filter by student status
+        const statusArray = parseQueryArray(status);
+        query.status = { $in: statusArray.map(s => s.trim()) };
     }
 
-    // Return all relevant data
+    // Return the constructed query and sorting details
     return {
         query,
         sortBy,
         school,
-        items_per_page,
-        skip_items
+        items_per_page: ITEMS_PER_PAGE,
+        skip_items: skipItems
     };
 };
