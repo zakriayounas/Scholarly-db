@@ -18,7 +18,7 @@ export const customRouter = () => {
 };
 
 export const handleFetchQuery = (req) => {
-    const { page = 1, first_name, sort_by, class_name, status, teacher_type, gender } = req.query;
+    const { page = 1, first_name, sort_by, class_name, status, teacher_type, gender, event_organizer, event_categories, event_statuses, event_type } = req.query;
     const school = req.school;
 
     const ITEMS_PER_PAGE = 20;
@@ -39,6 +39,25 @@ export const handleFetchQuery = (req) => {
     if (class_name) {
         const classArray = parseQueryArray(class_name);
         query.class_name = { $in: classArray.map(cl => cl.trim()) };
+    }
+
+    // Filter by event type
+    if (event_type) {
+        const eventTypesArray = parseQueryArray(event_type);
+        query.event_type = { $in: eventTypesArray.map(et => et.trim()) };
+    }
+
+    // Filter by event category
+    if (event_categories) {
+        const eventCategoriesArray = parseQueryArray(event_categories);
+        query.event_category = { $in: eventCategoriesArray.map(ec => ec.trim()) };
+    }
+
+
+    // Filter by event organizer
+    if (event_organizer) {
+        const eventOrganizersArray = parseQueryArray(event_organizer);
+        query.event_organizer = { $in: eventOrganizersArray.map(eo => eo.trim()) };
     }
 
     // Filter by gender
