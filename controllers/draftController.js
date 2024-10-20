@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { Draft } from "../models/draftModel.js";
 
-export const getAllDrafts = async (req, res) => {
+export const getSchoolDrafts = async (req, res) => {
     const { page = 1, type } = req.query;
 
     const school = req.school;

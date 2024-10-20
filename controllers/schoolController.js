@@ -1,6 +1,33 @@
-import School from "../models/schoolModel.js";
 import mongoose from "mongoose";
-import User from "../models/userModel.js";
+import School from "../models/schoolModel.js";
+import SchoolClass from "../models/classModel.js";
+import Section from "../models/sectionModel.js";
+
+
+// creating default items for school 
+const addSchoolDefaultItems = async (school) => {
+    // Create three default sections (A, B, C)
+    const sections = [{ name: 'A', color: "#fb7d5b" }, { name: 'B', color: "#4d44b5" }, { name: 'C', color: "#fcc43e" }];
+    const sectionDocs = sections.map(section => ({
+        section_name: section.name,
+        color: section.color,
+        school_id: school._id,
+    }));
+    const createdSections = await Section.insertMany(sectionDocs);  // Using insertMany for performance
+
+    // Create ten default classes and assign them to Section A 
+    const defaultClasses = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+    const classDocs = defaultClasses.map(className => ({
+        class_name: className,
+        class_admin: school.school_admin,  // Assign admin or default admin
+        is_default: true,  // These are default classes
+        section_id: createdSections[0]._id,  // Initially assign to Section A
+        school_id: school._id,
+    }));
+    await SchoolClass.insertMany(classDocs);  // Using insertMany for better performance
+}
+
+
 
 // Get all schools
 export const getAllSchools = async (req, res) => {
@@ -59,6 +86,7 @@ export const addNewSchool = async (req, res) => {
             school_address,
         });
         const savedSchool = await newSchool.save();
+        await addSchoolDefaultItems(savedSchool)
         const schoolDetails = await savedSchool.populate('school_admin');
         res.status(201).json({
             success: true,

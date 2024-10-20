@@ -12,11 +12,13 @@ export const getSequenceId = async (schoolId, type) => {
     );
     return counter[updateField];
 };
-// utils/createRouter.js
+
+// custom Router for mergeParam config
 export const customRouter = () => {
     return express.Router({ mergeParams: true });
 };
 
+// custom query to handle filters 
 export const handleFetchQuery = (req) => {
     const { page = 1, first_name, sort_by, class_name, status, teacher_type, gender, event_organizer, event_categories, event_statuses, event_type } = req.query;
     const school = req.school;
@@ -105,3 +107,5 @@ export const handleFetchQuery = (req) => {
         skip_items: skipItems
     };
 };
+
+

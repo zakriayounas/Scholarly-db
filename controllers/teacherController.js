@@ -2,7 +2,9 @@ import mongoose from 'mongoose';
 import Teacher from '../models/teacherModel.js';
 import { getRandomColor } from "../utils/helper.js";
 import { getSequenceId, handleFetchQuery } from './sharedController.js';
-export const getAllTeachers = async (req, res) => {
+
+
+export const getSchoolTeachers = async (req, res) => {
     const { query, sortBy, school, items_per_page, skip_items } = handleFetchQuery(req);
 
 
@@ -13,7 +15,7 @@ export const getAllTeachers = async (req, res) => {
 
         // Fetch teachers based on the query and pagination
         const teachersList = await Teacher.find(query)
-            .select('-address -cnic_number -university -degree -degree_start_date -degree_end_date -degree_city')
+            .select('-address -cnic_number -university -degree -degree_start_date -degree_end_date -degree_city -school_id')
             .limit(items_per_page)
             .skip(skip_items)
             .sort(sortBy);

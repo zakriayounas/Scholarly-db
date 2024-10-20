@@ -107,6 +107,16 @@ const teacherSchema = new mongoose.Schema(
             required: true,
             unique: true
         },
+        school_roles: [{
+            type: String,
+            enum: ["admin", "teacher"],
+            default: "teacher",
+        }],
+        class_roles: [{
+            type: String,
+            enum: ["admin", "class_teacher"],
+            default: "class_teacher",
+        }],
     },
     {
         timestamps: true,

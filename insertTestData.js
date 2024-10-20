@@ -4,7 +4,7 @@ import { faker } from '@faker-js/faker';
 import { calculateAge, classesList } from './utils/helper.js';
 import { getSequenceId } from './controllers/sharedController.js';
 import Student from './models/studentModel.js';
-import Teacher from './models/TeacherModel.js'
+import Teacher from './models/teacherModel.js'
 dotenv.config();
 
 const connectionURI = process.env.MONGO_URI;

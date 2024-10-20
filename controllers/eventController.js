@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Event from "../models/eventModel.js";
-export const getAllEvents = async (req, res) => {
+
+export const getSchoolEvents = async (req, res) => {
     const {
         page = 1,
         event_name,

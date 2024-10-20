@@ -3,7 +3,7 @@ import Student from "../models/studentModel.js";
 import { calculateAge, getRandomColor } from "../utils/helper.js";
 import { getSequenceId, handleFetchQuery } from "./sharedController.js";
 
-export const getAllStudents = async (req, res) => {
+export const getSchoolStudents = async (req, res) => {
     // Destructure the values returned by handleFetchQuery
     const { query, sortBy, school, items_per_page, skip_items } = handleFetchQuery(req);
     try {
@@ -16,7 +16,7 @@ export const getAllStudents = async (req, res) => {
 
         // Fetch students from the database with pagination and sorting
         const studentsList = await Student.find(query)
-            .select('-payment -b_form -cnic_number  -date_of_birth -student_age -address')  // Exclude private fields
+            .select('-payment -b_form -cnic_number  -date_of_birth -student_age -address -school_id')  // Exclude private fields
             .limit(items_per_page)
             .skip(skip_items)
             .sort(sortBy);
