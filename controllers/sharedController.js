@@ -1,6 +1,9 @@
 import express from 'express';
 import Counter from "../models/counterModel.js";
 import { parseQueryArray } from '../utils/helper.js';
+import SchoolClass from '../models/classModel.js';
+import mongoose from 'mongoose';
+import Student from '../models/studentModel.js';
 
 // getting enroll_id in school
 export const getSequenceId = async (schoolId, type) => {
@@ -19,14 +22,26 @@ export const customRouter = () => {
 };
 
 // custom query to handle filters 
-export const handleFetchQuery = (req) => {
+export const handleFetchQuery = async (req, classId) => {
     const { page = 1, first_name, sort_by, class_name, status, teacher_type, gender, event_organizer, event_categories, event_statuses, event_type } = req.query;
     const school = req.school;
-
     const ITEMS_PER_PAGE = 20;
     const skipItems = ITEMS_PER_PAGE * (page - 1);  // Pagination logic
 
     let query = { school_id: school._id };  // Initial query includes school filter
+
+    // Add class_id filter only if it's provided
+    if (classId) {
+        // Validate classId by checking if it exists in the database
+        const classExists = await SchoolClass.exists({ _id: classId, school_id: school._id }); // Ensure it's from the same school
+        if (!classExists) {
+            return { error: true, message: "Invalid class ID." }; // Return an error response
+        }
+    }
+    if (classId) {
+        query.class_id = classId;
+    }
+
     let sortBy = { createdAt: -1 };  // Sorting object
 
     // Helper function for case-insensitive search with RegExp
@@ -108,4 +123,28 @@ export const handleFetchQuery = (req) => {
     };
 };
 
+// find class by id 
+export const getClassById = async (classId, res) => {
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+        return res.status(400).json({ message: "Invalid class ID" });
+    }
+    // Find the new class to which students will be moved
+    const existingClass = await SchoolClass.findById(classId);
+    if (!existingClass) {
+        return res.status(404).json({ message: "Class not found" });
+    }
+    return existingClass
+}
 
+// find student by id
+export const getStudentById = async (studentId, res) => {
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+        return res.status(400).json({ message: "Invalid student ID" });
+    }
+
+    const existingStudent = await Student.findById(studentId);
+    if (!existingStudent) {
+        return res.status(404).json({ message: "Student not found" });
+    }
+    return existingStudent
+}

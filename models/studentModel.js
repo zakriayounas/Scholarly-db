@@ -28,9 +28,9 @@ const studentSchema = new mongoose.Schema(
             type: Date,
             required: [true, 'Date of birth is required'],
         },
-        class_name: {
-            type: String,
-            required: [true, 'Class name is required'],
+        class_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: [true, 'Class Id is required'],
         },
         status: {
             type: String,

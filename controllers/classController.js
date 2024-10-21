@@ -3,7 +3,7 @@ import { handleFetchQuery } from "./sharedController.js";
 
 
 // handling  default value of class
-const handleDefaultClass = async ({ class_name, is_default, school_id }) => {
+const handleDefaultClass = async ({ class_name, school_id }) => {
     try {
         const existingDefaultClass = await SchoolClass.findOne({ class_name, is_default: true, school_id });
         if (existingDefaultClass) {
@@ -79,7 +79,7 @@ export const addNewClass = async (req, res) => {
     try {
         // Handle default class
         if (is_default) {
-            await handleDefaultClass({ class_name, is_default, school_id });
+            await handleDefaultClass({ class_name, school_id });
         }
 
         // Handle class multi-section logic
@@ -134,22 +134,13 @@ export const viewClassDetails = async (req, res) => {
 
 // Update class details
 export const updateClassDetails = async (req, res) => {
-    const { class_id: classId } = req.params;
+    const { class_id } = req.params;
     const { section_id, class_admin, class_capacity, is_default } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(classId)) {
-        return res.status(400).json({ message: "Invalid Class ID" });
-    }
-
+    const existingClass = getClassById(class_id, res)
     try {
-        const existingClass = await SchoolClass.findById(classId);
-        if (!existingClass) {
-            return res.status(404).json({ message: "Class not found" });
-        }
-
         // Handle default class logic
         if (is_default) {
-            await handleDefaultClass({ class_name: existingClass.class_name, is_default, school_id: existingClass.school_id });
+            await handleDefaultClass({ class_name: existingClass.class_name, school_id: existingClass.school_id });
         }
 
         // Update class details
