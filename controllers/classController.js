@@ -1,6 +1,6 @@
 import SchoolClass from "../models/classModel.js";
 import { getItemById, handleFetchQuery } from "./sharedController.js";
-
+import mongoose from "mongoose";
 // handling  default value of class
 const handleDefaultClass = async ({ class_name, school_id }) => {
     try {

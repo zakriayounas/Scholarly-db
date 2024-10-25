@@ -1,13 +1,14 @@
 import { addNewSchool, getAllSchools, updateSchoolDetails, updateSchoolStatus, viewSchoolDetails } from '../controllers/schoolController.js';
 import { customRouter } from '../controllers/sharedController.js';
+import { validateSchoolAndAdmin } from '../middlewares/middlewares.js';
 const schoolRouter = customRouter()
 
 schoolRouter
     .get('/', getAllSchools)  // GET all schools
-    .get('/:id/view-school-details', viewSchoolDetails)  // GET details for a specific school
+    .get('/:school_id/view-school-details', validateSchoolAndAdmin, viewSchoolDetails)  // GET details for a specific school
     .post('/add-new-school', addNewSchool)  // POST to add a new school
-    .post('/:id/update-school', updateSchoolDetails)  // POST to update a specific school
-    .post('/:id/update-school-status', updateSchoolStatus);  // POST to update school status
+    .post('/:school_id/update-school', validateSchoolAndAdmin, updateSchoolDetails)  // POST to update a specific school
+    .post('/:school_id/update-school-status', validateSchoolAndAdmin, updateSchoolStatus);  // POST to update school status
 
 
 export default schoolRouter;

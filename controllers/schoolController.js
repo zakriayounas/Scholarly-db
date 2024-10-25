@@ -99,21 +99,8 @@ export const addNewSchool = async (req, res) => {
 
 // View school details
 export const viewSchoolDetails = async (req, res) => {
-    const { id: schoolId } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(schoolId)) {
-        return res.status(400).json({ success: false, message: "Invalid school ID" });
-    }
-
     try {
-        const school = await School.findById(schoolId).populate('school_admin');
-
-        if (!school) {
-            return res.status(404).json({ success: false, message: "School not found" });
-        }
-        if (school.school_admin._id.toString() !== req.user.id) {
-            return res.status(403).json({ success: false, message: "This is not your school" });
-        }
-
+        const school = req.school
         res.status(200).json({
             success: true,
             school: school
@@ -125,22 +112,11 @@ export const viewSchoolDetails = async (req, res) => {
 
 // Update school details
 export const updateSchoolDetails = async (req, res) => {
-    const { id: schoolId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(schoolId)) {
-        return res.status(400).json({ success: false, message: "Invalid school ID" });
-    }
     const { school_name, school_address, school_status } = req.body;
 
     try {
-        const existingSchool = await School.findById(schoolId);
-        if (!existingSchool) {
-            return res.status(404).json({ success: false, message: "School not found" });
-        }
-        if (existingSchool.school_admin.toString() !== req.user.id) {
-            return res.status(403).json({ success: false, message: "This is not your school" });
-        }
-
+        const existingSchool = req.school
         existingSchool.school_name = school_name || existingSchool.school_name;
         existingSchool.school_address = school_address || existingSchool.school_address;
         existingSchool.school_status = school_status || existingSchool.school_status;
@@ -160,15 +136,10 @@ export const updateSchoolDetails = async (req, res) => {
 
 // Update school status
 export const updateSchoolStatus = async (req, res) => {
-    const { school_id: schoolId, school_status } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(schoolId)) {
-        return res.status(400).json({ success: false, message: "Invalid school ID" });
-    }
+    const { school_status } = req.body;
+
     try {
-        const existingSchool = await School.findById(schoolId);
-        if (!existingSchool) {
-            return res.status(404).json({ success: false, message: "School not found" });
-        }
+        const existingSchool = req.school
         existingSchool.school_status = school_status || existingSchool.school_status;
         const updatedSchool = await existingSchool.save();
         const updatedSchoolDetails = await updatedSchool.populate('school_admin');
