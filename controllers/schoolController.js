@@ -19,9 +19,8 @@ const addSchoolDefaultItems = async (school) => {
     const defaultClasses = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
     const classDocs = defaultClasses.map(className => ({
         class_name: className,
-        class_admin: school.school_admin,  // Assign admin or default admin
         is_default: true,  // These are default classes
-        section_id: createdSections[0]._id,  // Initially assign to Section A
+        section: createdSections[0]._id,  // Initially assign to Section A
         school_id: school._id,
     }));
     await SchoolClass.insertMany(classDocs);  // Using insertMany for better performance

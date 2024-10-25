@@ -10,7 +10,7 @@ const classSchema = new mongoose.Schema(
         class_admin: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Teacher",
-            default: ''
+            default: null
         },
         is_default: {
             type: Boolean,
@@ -20,7 +20,7 @@ const classSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
-        section_id: {
+        section: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Section",
             required: true,
@@ -50,7 +50,7 @@ const classSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
-classSchema.index({ class_name: 1, section_id: 1, school_id: 1 }, { unique: true });
+classSchema.index({ class_name: 1, section: 1, school_id: 1 }, { unique: true });
 
 const SchoolClass = mongoose.model("SchoolClass", classSchema);
 

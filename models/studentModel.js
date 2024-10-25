@@ -132,5 +132,5 @@ const studentSchema = new mongoose.Schema(
 // Error handling middleware
 studentSchema.post('save', fieldErrorsValidation);
 
-const Student = mongoose.model("student", studentSchema);
+const Student = mongoose.model("Student", studentSchema);
 export default Student;

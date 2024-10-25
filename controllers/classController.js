@@ -1,7 +1,6 @@
 import SchoolClass from "../models/classModel.js";
 import { getItemById, handleFetchQuery } from "./sharedController.js";
 
-
 // handling  default value of class
 const handleDefaultClass = async ({ class_name, school_id }) => {
     try {
@@ -33,8 +32,7 @@ const handleClassMultiSection = async (class_name, school_id) => {
 
 // get school classes
 export const getSchoolClasses = async (req, res) => {
-    // Destructure the values returned by handleFetchQuery
-    const { query, sortBy, school, items_per_page, skip_items } = handleFetchQuery(req);
+    const { query, sortBy, school, items_per_page, skip_items } = await handleFetchQuery(req);
 
     try {
         // Count total number of schoolClasses matching the query
@@ -47,7 +45,7 @@ export const getSchoolClasses = async (req, res) => {
         // Fetch schoolClasses from the database with pagination and sorting
         const classesList = await SchoolClass.find(query)
             .populate({
-                path: 'section_id',
+                path: 'section',
                 select: '-school_id ', // Specify the fields you want from Section
             })
             .populate({
@@ -74,7 +72,7 @@ export const getSchoolClasses = async (req, res) => {
 
 // Add a new class
 export const addNewClass = async (req, res) => {
-    const { class_name, class_admin, section_id, school_id, class_capacity, is_default } = req.body;
+    const { class_name, school_id, is_default } = req.body;
 
     try {
         // Handle default class
@@ -87,7 +85,7 @@ export const addNewClass = async (req, res) => {
 
         // Create and save new class
         const newClass = new SchoolClass({
-            class_name, class_admin, section_id, school_id, class_capacity, is_default, has_multiple_sections
+            ...req.body, has_multiple_sections
         });
         const savedClass = await newClass.save();
 
@@ -108,10 +106,10 @@ export const viewClassDetails = async (req, res) => {
     }
 
     try {
-        // Find the class by its ID and populate related fields (section_id and class_admin)
+        // Find the class by its ID and populate related fields (section and class_admin)
         const existingClass = await SchoolClass.findById(classId)
             .populate({
-                path: 'section_id',
+                path: 'section',
                 select: '-school_id', // Specify the fields you want from Section
             })
             .populate({
@@ -144,7 +142,7 @@ export const updateClassDetails = async (req, res) => {
         }
 
         // Update class details
-        existingClass.section_id = section_id || existingClass.section_id;
+        existingClass.section = section_id || existingClass.section;
         existingClass.class_admin = class_admin || existingClass.class_admin;
         existingClass.class_capacity = class_capacity || existingClass.class_capacity;
         existingClass.is_default = is_default !== undefined ? is_default : existingClass.is_default;

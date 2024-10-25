@@ -5,7 +5,7 @@ import { getSequenceId, handleFetchQuery } from './sharedController.js';
 
 
 export const getSchoolTeachers = async (req, res) => {
-    const { query, sortBy, school, items_per_page, skip_items } = handleFetchQuery(req);
+    const { query, sortBy, school, items_per_page, skip_items } = await handleFetchQuery(req);
 
 
     try {

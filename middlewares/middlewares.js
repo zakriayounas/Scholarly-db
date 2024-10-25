@@ -15,8 +15,8 @@ export const jsonParser = express.json();
 export const urlEncodedParser = express.urlencoded({ extended: true });
 // CORS middleware
 export const corsMiddleware = cors();
-// Auth middleware
 
+// Auth middleware
 export const isAuthenticated = async (req, res, next) => {
     const token = req.headers.authorization;
 
@@ -59,6 +59,8 @@ export const fileUploadMiddleware = (req, res, next) => {
         next();
     });
 };
+
+// school admin validate
 export const validateSchoolAndAdmin = async (req, res, next) => {
     const { school_id: schoolId } = req.params;
 
