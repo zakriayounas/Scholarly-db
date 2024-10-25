@@ -4,6 +4,8 @@ import { parseQueryArray } from '../utils/helper.js';
 import SchoolClass from '../models/classModel.js';
 import mongoose from 'mongoose';
 import Student from '../models/studentModel.js';
+import Teacher from '../models/teacherModel.js';
+import School from '../models/schoolModel.js';
 
 // getting enroll_id in school
 export const getSequenceId = async (schoolId, type) => {
@@ -123,28 +125,12 @@ export const handleFetchQuery = async (req, classId) => {
     };
 };
 
-// find class by id 
-export const getClassById = async (classId, res) => {
-    if (!mongoose.Types.ObjectId.isValid(classId)) {
-        return res.status(400).json({ message: "Invalid class ID" });
+// find item by id
+export const getItemById = async (itemId, type, res) => {
+    const collection = type === "student" ? Student : type === "teacher" ? Teacher : type === "class" ? SchoolClass : type === "school" ? School : null
+    const item = await collection.findById(itemId);
+    if (!item) {
+        return res.status(404).json({ message: `${type} not found` });
     }
-    // Find the new class to which students will be moved
-    const existingClass = await SchoolClass.findById(classId);
-    if (!existingClass) {
-        return res.status(404).json({ message: "Class not found" });
-    }
-    return existingClass
-}
-
-// find student by id
-export const getStudentById = async (studentId, res) => {
-    if (!mongoose.Types.ObjectId.isValid(studentId)) {
-        return res.status(400).json({ message: "Invalid student ID" });
-    }
-
-    const existingStudent = await Student.findById(studentId);
-    if (!existingStudent) {
-        return res.status(404).json({ message: "Student not found" });
-    }
-    return existingStudent
-}
+    return item
+};

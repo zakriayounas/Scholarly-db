@@ -1,5 +1,5 @@
 import SchoolClass from "../models/classModel.js";
-import { handleFetchQuery } from "./sharedController.js";
+import { getItemById, handleFetchQuery } from "./sharedController.js";
 
 
 // handling  default value of class
@@ -136,7 +136,7 @@ export const viewClassDetails = async (req, res) => {
 export const updateClassDetails = async (req, res) => {
     const { class_id } = req.params;
     const { section_id, class_admin, class_capacity, is_default } = req.body;
-    const existingClass = getClassById(class_id, res)
+    const existingClass = getItemById(class_id, "class", res)
     try {
         // Handle default class logic
         if (is_default) {

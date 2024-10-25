@@ -1,7 +1,7 @@
 import SchoolClass from "../models/classModel.js";
 import Student from "../models/studentModel.js";
 import { calculateAge, getRandomColor } from "../utils/helper.js";
-import { getClassById, getSequenceId, getStudentById, handleFetchQuery } from "./sharedController.js";
+import { getItemById, getSequenceId, handleFetchQuery } from "./sharedController.js";
 
 // check class capacity
 const validateClassCapacity = (classToUpdate, studentToAdd, res) => {
@@ -175,26 +175,28 @@ export const addNewStudent = async (req, res) => {
 
 // view student details
 export const viewStudentDetails = async (req, res) => {
-    const school = req.school;
     const { student_id } = req.params;
-    const existingStudent = getStudentById(student_id, res)
+    if (!mongoose.Types.ObjectId.isValid(student_id)) {
+        return res.status(400).json({ message: "Invalid student ID" });
+    }
     try {
-
+        const existingStudent = await getItemById(student_id, "student", res);
         res.status(200).json({
             student_details: existingStudent,
-            school: school,
         });
     } catch (error) {
+        const statusCode = error.message === "Invalid student ID" ? 400 : 404;
         res
-            .status(500)
-            .json({ message: "An error occurred while retrieving student details" });
+            .status(statusCode)
+            .json({ message: error.message });
     }
 };
-
 // update student details
 export const updateStudentDetails = async (req, res) => {
     const { student_id } = req.params;
-    const existingStudent = getStudentById(student_id, res)
+    if (!mongoose.Types.ObjectId.isValid(student_id)) {
+        return res.status(400).json({ message: "Invalid student ID" });
+    }
     const {
         first_name,
         last_name,
@@ -211,6 +213,8 @@ export const updateStudentDetails = async (req, res) => {
     } = req.body;
 
     try {
+        const existingStudent = getItemById(student_id, "student", res)
+
         if (b_form && b_form !== existingStudent.b_form) {
             const bFormExistAlready = await Student.findOne({ b_form });
             if (bFormExistAlready) {
@@ -260,9 +264,11 @@ export const updateStudentDetails = async (req, res) => {
 export const updateStudentStatus = async (req, res) => {
     const { student_id, status } = req.body;
     const school = req.school;
-    const existingStudent = getStudentById(student_id, res)
+    if (!mongoose.Types.ObjectId.isValid(student_id)) {
+        return res.status(400).json({ message: "Invalid student ID" });
+    }
     try {
-
+        const existingStudent = getItemById(student_id, "student", res)
         // handling status count for class and school
         await handleStudentCountUpdate(existingStudent.class_id, school, "status_update", existingStudent.status, status, res)
 
@@ -283,14 +289,14 @@ export const updateStudentStatus = async (req, res) => {
 // update student class
 export const moveStudentsToOtherClass = async (req, res) => {
     const { students, new_class_id } = req.body;
-    const newClass = await getClassById(new_class_id, res);
     try {
+        const newClass = await getItemById(new_class_id, "class", res);
         // Find all students from the given array of student IDs
         const studentList = await Student.find({ _id: { $in: students } });
 
         // Use the class of the first student to find the old class
         const old_class_id = studentList[0].class_id;
-        const oldClass = await getClassById(old_class_id, res);
+        const oldClass = await getItemById(old_class_id, "class", res);
 
         // Count the number of active students being transferred
         const activeStudentsCount = studentList.filter(student => student.status === "active").length;
