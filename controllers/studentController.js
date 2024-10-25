@@ -2,7 +2,7 @@ import SchoolClass from "../models/classModel.js";
 import Student from "../models/studentModel.js";
 import { calculateAge, getRandomColor } from "../utils/helper.js";
 import { getItemById, getSequenceId, handleFetchQuery } from "./sharedController.js";
-
+import mongoose from "mongoose";
 // check class capacity
 const validateClassCapacity = (classToUpdate, studentToAdd, res) => {
     // Check if the class has space
@@ -188,15 +188,9 @@ export const addNewStudent = async (req, res) => {
 // view student details
 export const viewStudentDetails = async (req, res) => {
     const { student_id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(student_id)) {
-        return res.status(400).json({ message: "Invalid student ID" });
-    }
     try {
         // Fetch the existing student with class population
-        const existingStudent = await getItemById(student_id, "student", res)
-            .populate(populateStudentClass)  // Populate class and section details
-            .lean();  // Convert to plain JavaScript object
-
+        const existingStudent = await getItemById(student_id, "student", populateStudentClass)
         // Format the student details
         const student_details = formatStudentWithClass(existingStudent);
 
@@ -232,7 +226,7 @@ export const updateStudentDetails = async (req, res) => {
     } = req.body;
 
     try {
-        const existingStudent = getItemById(student_id, "student", res)
+        const existingStudent = getItemById(student_id, "student")
 
         if (b_form && b_form !== existingStudent.b_form) {
             const bFormExistAlready = await Student.findOne({ b_form });
@@ -287,7 +281,7 @@ export const updateStudentStatus = async (req, res) => {
         return res.status(400).json({ message: "Invalid student ID" });
     }
     try {
-        const existingStudent = getItemById(student_id, "student", res)
+        const existingStudent = getItemById(student_id, "student")
         // handling status count for class and school
         await handleStudentCountUpdate(existingStudent.class_id, school, "status_update", existingStudent.status, status, res)
 
@@ -309,13 +303,13 @@ export const updateStudentStatus = async (req, res) => {
 export const moveStudentsToOtherClass = async (req, res) => {
     const { students, new_class_id } = req.body;
     try {
-        const newClass = await getItemById(new_class_id, "class", res);
+        const newClass = await getItemById(new_class_id, "class");
         // Find all students from the given array of student IDs
         const studentList = await Student.find({ _id: { $in: students } });
 
         // Use the class of the first student to find the old class
         const old_class_id = studentList[0].class_id;
-        const oldClass = await getItemById(old_class_id, "class", res);
+        const oldClass = await getItemById(old_class_id, "class");
 
         // Count the number of active students being transferred
         const activeStudentsCount = studentList.filter(student => student.status === "active").length;

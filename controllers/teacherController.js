@@ -66,11 +66,8 @@ export const addNewTeacher = async (req, res) => {
 
 export const viewTeacherDetails = async (req, res) => {
     const { teacher_id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(teacher_id)) {
-        return res.status(400).json({ message: "Invalid teacher ID" });
-    }
     try {
-        const teacher = await getItemById(teacher_id, "teacher", res)
+        const teacher = await getItemById(teacher_id, "teacher")
         res.status(200).json({
             teacher_details: teacher,
         });
@@ -85,11 +82,6 @@ export const viewTeacherDetails = async (req, res) => {
 
 export const updateTeacherDetails = async (req, res) => {
     const { teacher_id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(teacher_id)) {
-        return res.status(400).json({ message: "Invalid Teacher ID" });
-    }
-
     const {
         first_name,
         last_name,
@@ -109,7 +101,7 @@ export const updateTeacherDetails = async (req, res) => {
     } = req.body;
 
     try {
-        const existingTeacher = await getItemById(teacher_id, "teacher", res)
+        const existingTeacher = await getItemById(teacher_id, "teacher")
         // Check for unique email
         if (email && email !== existingTeacher.email) {
             const emailExists = await Teacher.findOne({ email });
@@ -159,12 +151,8 @@ export const updateTeacherDetails = async (req, res) => {
 
 export const updateTeacherStatus = async (req, res) => {
     const { teacher_id, status } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(teacher_id)) {
-        return res.status(400).json({ message: "Invalid Teacher ID" });
-    }
     try {
-        const existingTeacher = await getItemById(teacher_id, "teacher", res)
+        const existingTeacher = await getItemById(teacher_id, "teacher")
 
         existingTeacher.status = status || existingTeacher.status;
         const updatedTeacher = await existingTeacher.save();

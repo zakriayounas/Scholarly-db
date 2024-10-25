@@ -126,11 +126,38 @@ export const handleFetchQuery = async (req, classId) => {
 };
 
 // find item by id
-export const getItemById = async (itemId, type, res) => {
-    const collection = type === "student" ? Student : type === "teacher" ? Teacher : type === "class" ? SchoolClass : type === "school" ? School : null
-    const item = await collection.findById(itemId);
-    if (!item) {
-        return res.status(404).json({ message: `${type} not found` });
+export const getItemById = async (itemId, type, populateObj = null) => {
+    // Check if itemId is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(itemId)) {
+        throw new Error(`Invalid ${type} ID: ${itemId}`);
     }
-    return item
+
+    // Determine the collection based on the type
+    const collection = type === "student" ? Student :
+        type === "teacher" ? Teacher :
+            type === "class" ? SchoolClass :
+                type === "school" ? School : null;
+
+    if (!collection) {
+        throw new Error(`Invalid type: ${type}`);
+    }
+
+    let query = collection.findById(itemId);
+
+    // Apply population if populateObj is provided
+    if (populateObj) {
+        query = query.populate(populateObj);
+    }
+
+    try {
+        // Execute the query and return the populated result
+        const result = await query.lean(); // Using lean for better performance
+        if (!result) {
+            throw new Error(`${type} not found`);
+        }
+        return result;
+    } catch (error) {
+        throw new Error(`Error fetching ${type}: ${error.message}`);
+    }
 };
+

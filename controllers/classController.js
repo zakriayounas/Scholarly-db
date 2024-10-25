@@ -100,28 +100,20 @@ export const addNewClass = async (req, res) => {
 export const viewClassDetails = async (req, res) => {
     const { class_id: classId } = req.params;
 
-    // Validate the Class ID
-    if (!mongoose.Types.ObjectId.isValid(classId)) {
-        return res.status(400).json({ message: "Invalid Class ID" });
-    }
-
     try {
         // Find the class by its ID and populate related fields (section and class_admin)
-        const existingClass = await SchoolClass.findById(classId)
-            .populate({
+        const populateClassDetails = [
+            {
                 path: 'section',
                 select: '-school_id', // Specify the fields you want from Section
-            })
-            .populate({
+            },
+            {
                 path: 'class_admin',
                 select: 'first_name last_name profile_color profile_image', // Specify the fields you want from Class Admin (Teacher)
-            })
+            }
+        ];
 
-        // If the class doesn't exist, return a 404 error
-        if (!existingClass) {
-            return res.status(404).json({ message: "Class not found" });
-        }
-
+        const existingClass = await getItemById(classId, "class", populateClassDetails);
         // Return the class details
         res.status(200).json({ class: existingClass });
     } catch (error) {
@@ -134,7 +126,7 @@ export const viewClassDetails = async (req, res) => {
 export const updateClassDetails = async (req, res) => {
     const { class_id } = req.params;
     const { section_id, class_admin, class_capacity, is_default } = req.body;
-    const existingClass = getItemById(class_id, "class", res)
+    const existingClass = await getItemById(class_id, "class")
     try {
         // Handle default class logic
         if (is_default) {
