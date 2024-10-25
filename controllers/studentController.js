@@ -19,6 +19,30 @@ const validateClassCapacity = (classToUpdate, studentToAdd, res) => {
 };
 
 
+const populateStudentClass = {
+    path: 'class_id',
+    select: 'class_name section_id has_multiple_sections',  // Add class_name and has_multiple_sections
+    populate: {
+        path: 'section_id',
+        select: 'section_name color'
+    }
+};
+
+// Helper to format student data
+const formatStudentWithClass = (student) => {
+    const { class_id } = student;
+    return {
+        ...student,
+        class: {
+            class_id: class_id?._id,
+            class_name: class_id?.class_name || 'N/A',  // Fallback for missing data
+            has_multiple_sections: class_id?.has_multiple_sections || false,
+            section_name: class_id?.section_id?.section_name || 'N/A',  // Fallback for missing section
+            color: class_id?.section_id?.color || 'N/A'
+        }
+    };
+};
+
 // handle Student Count update
 const handleStudentCountUpdate = async (class_id, school, type, prevStatus, newStatus, res) => {
     // Find the class to check for capacity
@@ -72,6 +96,8 @@ const handleStudentCountUpdate = async (class_id, school, type, prevStatus, newS
     await school.save();
 };
 
+
+
 //  fetch School or specific class students
 export const fetchStudents = async (req, res) => {
     const class_id = req?.params?.class_id || null;
@@ -93,35 +119,18 @@ export const fetchStudents = async (req, res) => {
         const lastPage = Math.ceil(totalStudents / items_per_page);
         const last_page_url = `/schools/${school._id}${class_id ? `/classes/${class_id}` : ""}/students?page=${lastPage}`;
 
-        // Fetch students from the database with pagination and sorting
+        // Fetch students with pagination, sorting, and class population
         const studentsList = await Student.find(query)
-            .populate({
-                path: 'class_id',  // Populate class details
-                select: 'section_id',  // Select only section_id
-                populate: {
-                    path: 'section_id',  // Populate section details within the class
-                    select: 'section_name color'  // Select section_name and color
-                }
-            })
-            .select('-payment -b_form -cnic_number -date_of_birth -student_age -address -school_id')  // Exclude sensitive fields
+            .populate(populateStudentClass)
+            .lean()  // Use lean for better performance
+            .select('-payment -b_form -cnic_number -date_of_birth -student_age -address -school_id')
             .limit(items_per_page)
             .skip(skip_items)
             .sort(sortBy);
 
-        // Reshape the result to combine class and section details under a new `class` field
-        const formattedStudents = studentsList.map(student => {
-            const { class_id } = student;  // Access the populated class_id
-            return {
-                ...student._doc,  // Spread the student's other fields
-                class: {  // Construct the `class` object
-                    class_id: class_id?._id,  // Retain class_id here for the response
-                    class_name: class_id?.class_name,
-                    has_multiple_sections: class_id?.has_multiple_sections,
-                    section_name: class_id?.section_id?.section_name,
-                    color: class_id?.section_id?.color
-                }
-            };
-        });
+        // Format the student data
+        const formattedStudents = studentsList.map(student => formatStudentWithClass(student));
+
 
         // Return the formatted data in the response
         res.status(200).json({
@@ -180,9 +189,16 @@ export const viewStudentDetails = async (req, res) => {
         return res.status(400).json({ message: "Invalid student ID" });
     }
     try {
-        const existingStudent = await getItemById(student_id, "student", res);
+        // Fetch the existing student with class population
+        const existingStudent = await getItemById(student_id, "student", res)
+            .populate(populateStudentClass)  // Populate class and section details
+            .lean();  // Convert to plain JavaScript object
+
+        // Format the student details
+        const student_details = formatStudentWithClass(existingStudent);
+
         res.status(200).json({
-            student_details: existingStudent,
+            student_details,
         });
     } catch (error) {
         const statusCode = error.message === "Invalid student ID" ? 400 : 404;
