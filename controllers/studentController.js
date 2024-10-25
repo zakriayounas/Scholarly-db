@@ -195,7 +195,7 @@ export const viewStudentDetails = async (req, res) => {
         const student_details = formatStudentWithClass(existingStudent);
 
         res.status(200).json({
-            student_details,
+            details: student_details,
         });
     } catch (error) {
         const statusCode = error.message === "Invalid student ID" ? 400 : 404;

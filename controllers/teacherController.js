@@ -69,7 +69,7 @@ export const viewTeacherDetails = async (req, res) => {
     try {
         const teacher = await getItemById(teacher_id, "teacher")
         res.status(200).json({
-            teacher_details: teacher,
+            details: teacher,
         });
     } catch (error) {
         res
