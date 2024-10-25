@@ -21,24 +21,27 @@ const validateClassCapacity = (classToUpdate, studentToAdd, res) => {
 
 const populateStudentClass = {
     path: 'class_id',
-    select: 'class_name section_id has_multiple_sections',  // Add class_name and has_multiple_sections
+    select: 'class_name section has_multiple_sections',  // Add class_name and has_multiple_sections
     populate: {
-        path: 'section_id',
+        path: 'section',
         select: 'section_name color'
     }
 };
 
 // Helper to format student data
 const formatStudentWithClass = (student) => {
-    const { class_id } = student;
+
+    // excluding class_id field obj and formatting class obj
+    const { class_id, ...restFields } = student;
+
     return {
-        ...student,
+        ...restFields,
         class: {
             class_id: class_id?._id,
             class_name: class_id?.class_name || 'N/A',  // Fallback for missing data
             has_multiple_sections: class_id?.has_multiple_sections || false,
-            section_name: class_id?.section_id?.section_name || 'N/A',  // Fallback for missing section
-            color: class_id?.section_id?.color || 'N/A'
+            section_name: class_id?.section?.section_name || 'N/A',  // Fallback for missing section
+            color: class_id?.section?.color || 'N/A'
         }
     };
 };

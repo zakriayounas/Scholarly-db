@@ -31,6 +31,7 @@ const studentSchema = new mongoose.Schema(
         class_id: {
             type: mongoose.Schema.Types.ObjectId,
             required: [true, 'Class Id is required'],
+            ref: "SchoolClass"
         },
         status: {
             type: String,
