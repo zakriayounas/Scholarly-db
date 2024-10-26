@@ -2,7 +2,7 @@ import Teacher from '../models/teacherModel.js';
 import { getRandomColor } from "../utils/helper.js";
 import { getItemById, getSequenceId, handleFetchQuery } from './sharedController.js';
 
-// handle Student Count update
+// handle teacher Count update
 const handleTeacherCountUpdate = async (school, type, prevStatus, newStatus) => {
     if (type === "add") {
         school.total_teachers += 1;
@@ -32,12 +32,9 @@ const handleTeacherCountUpdate = async (school, type, prevStatus, newStatus) => 
     await school.save();
 };
 
-
-
+// fetch teachers
 export const getSchoolTeachers = async (req, res) => {
     const { query, sortBy, school, items_per_page, skip_items } = await handleFetchQuery(req);
-
-
     try {
         const totalTeachers = await Teacher.countDocuments(query);
         const lastPage = Math.ceil(totalTeachers / items_per_page);
@@ -45,7 +42,7 @@ export const getSchoolTeachers = async (req, res) => {
 
         // Fetch teachers based on the query and pagination
         const teachersList = await Teacher.find(query)
-            .select('-address -cnic_number -university -degree -degree_start_date -degree_end_date -degree_city -school_id')
+            .select('first_name last_name profile_image profile_color phone email is_specialized')
             .limit(items_per_page)
             .skip(skip_items)
             .sort(sortBy);
@@ -63,7 +60,7 @@ export const getSchoolTeachers = async (req, res) => {
     }
 };
 
-
+//  add new teacher 
 export const addNewTeacher = async (req, res) => {
     const { cnic_number, email } = req.body
     const school = req.school;
@@ -93,6 +90,7 @@ export const addNewTeacher = async (req, res) => {
     });
 };
 
+//  view teacher details
 export const viewTeacherDetails = async (req, res) => {
     const { teacher_id } = req.params;
     try {
@@ -105,7 +103,7 @@ export const viewTeacherDetails = async (req, res) => {
     }
 };
 
-
+// update teacher details
 export const updateTeacherDetails = async (req, res) => {
     const { teacher_id } = req.params;
     const {
@@ -173,6 +171,7 @@ export const updateTeacherDetails = async (req, res) => {
     }
 };
 
+// update teacher status
 export const updateTeacherStatus = async (req, res) => {
     const { teacher_id, status } = req.body;
     const school = req.school;
