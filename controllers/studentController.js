@@ -207,9 +207,6 @@ export const viewStudentDetails = async (req, res) => {
 // update student details
 export const updateStudentDetails = async (req, res) => {
     const { student_id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(student_id)) {
-        return res.status(400).json({ message: "Invalid student ID" });
-    }
     const {
         first_name,
         last_name,
@@ -277,9 +274,7 @@ export const updateStudentDetails = async (req, res) => {
 export const updateStudentStatus = async (req, res) => {
     const { student_id, status } = req.body;
     const school = req.school;
-    if (!mongoose.Types.ObjectId.isValid(student_id)) {
-        return res.status(400).json({ message: "Invalid student ID" });
-    }
+
     try {
         const existingStudent = getItemById(student_id, "student")
         // handling status count for class and school

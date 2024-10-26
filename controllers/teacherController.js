@@ -1,7 +1,37 @@
-import mongoose from 'mongoose';
 import Teacher from '../models/teacherModel.js';
 import { getRandomColor } from "../utils/helper.js";
-import { getSequenceId, handleFetchQuery } from './sharedController.js';
+import { getItemById, getSequenceId, handleFetchQuery } from './sharedController.js';
+
+// handle Student Count update
+const handleTeacherCountUpdate = async (school, type, prevStatus, newStatus) => {
+    if (type === "add") {
+        school.total_teachers += 1;
+        school.active_teachers += 1;
+    } else if (type === "status_update") {
+        if (prevStatus !== newStatus) {
+            // Handle the case when moving out of "active"
+            if (prevStatus === "active") {
+                school.active_teachers -= 1;
+            } else if (prevStatus === "suspended") {
+                school.suspended_teachers -= 1;
+            } else if (prevStatus === "left") {
+                school.left_teachers -= 1;
+            }
+
+            // Handle the case when moving into "active"
+            if (newStatus === "active") {
+                school.active_teachers += 1;
+            } else if (newStatus === "suspended") {
+                school.suspended_teachers += 1;
+            } else if (newStatus === "left") {
+                school.left_teachers += 1;
+            }
+        }
+
+    }
+    await school.save();
+};
+
 
 
 export const getSchoolTeachers = async (req, res) => {
@@ -56,13 +86,12 @@ export const addNewTeacher = async (req, res) => {
         sc_join_id
     });
     const savedTeacher = await newTeacher.save();
-
+    await handleTeacherCountUpdate(school, "add")
     res.status(201).json({
         message: "Teacher added successfully!",
         teacher: savedTeacher
     });
 };
-
 
 export const viewTeacherDetails = async (req, res) => {
     const { teacher_id } = req.params;
@@ -72,12 +101,9 @@ export const viewTeacherDetails = async (req, res) => {
             details: teacher,
         });
     } catch (error) {
-        res
-            .status(500)
-            .json({ message: "An error occurred while retrieving teacher details" });
+        res.status(500).json({ message: `An error occurred: ${error.message}` }); // Include the error message in the response
     }
 };
-
 
 
 export const updateTeacherDetails = async (req, res) => {
@@ -96,7 +122,6 @@ export const updateTeacherDetails = async (req, res) => {
         degree,
         degree_start_date,
         degree_end_date,
-        status,
         degree_city
     } = req.body;
 
@@ -125,7 +150,6 @@ export const updateTeacherDetails = async (req, res) => {
             degree_end_date,
             cnic_number,
             degree_city,
-            status,
             gender,
             profile_image,
         };
@@ -151,11 +175,14 @@ export const updateTeacherDetails = async (req, res) => {
 
 export const updateTeacherStatus = async (req, res) => {
     const { teacher_id, status } = req.body;
+    const school = req.school;
+
     try {
         const existingTeacher = await getItemById(teacher_id, "teacher")
 
         existingTeacher.status = status || existingTeacher.status;
         const updatedTeacher = await existingTeacher.save();
+        await handleTeacherCountUpdate(school, "status_update", existingTeacher.status, status)
 
         res.status(200).json({
             message: "Teacher status updated successfully!",

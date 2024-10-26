@@ -63,30 +63,43 @@ const teacherSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
-        specialized_subjects: {
-            type: [String],
-            default: [],
+        expertise: {
+            type: [{
+                type: String,
+                required: false
+            }],
+            default: [], // This allows the array to be empty by default
         },
-        university: {
+        about: {
             type: String,
-            required: true,
+            default: ""
         },
-        degree: {
-            type: String,
-            required: true,
-        },
-        degree_start_date: {
-            type: Date,
-            required: true,
-        },
-        degree_end_date: {
-            type: Date,
-            required: true,
-        },
-        degree_city: {
-            type: String,
-            required: true,
-        },
+        education: [{
+            _id: false, // Prevents the automatic creation of an _id field
+            university: {
+                type: String,
+                required: true, // Ensures a university name is provided
+            },
+            degree: {
+                type: String,
+                required: true, // Ensures a degree title is provided (e.g., BSc, MSc, etc.)
+            },
+            degree_start_date: {
+                type: Date,
+                required: true, // Ensures the degree start date is provided
+            },
+            degree_end_date: {
+                type: Date,
+                required: true, // Ensures the degree end date is provided
+                validate: {
+                    validator: function (value) {
+                        // Ensure end date is after start date
+                        return value > this.degree_start_date;
+                    },
+                    message: 'End date must be after start date',
+                }
+            },
+        }],
         status: {
             type: String,
             required: true,
@@ -107,15 +120,22 @@ const teacherSchema = new mongoose.Schema(
             required: true,
             unique: true
         },
-        school_roles: [{
+        school_role: {
             type: String,
             enum: ["admin", "teacher"],
-            default: "teacher",
-        }],
+            default: "teacher"
+        },
         class_roles: [{
-            type: String,
-            enum: ["admin", "class_teacher"],
-            default: "class_teacher",
+            class_id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'SchoolClass',
+                required: true
+            },
+            role: {
+                type: String,
+                enum: ["admin", "class_teacher"],
+                default: "class_teacher"
+            }
         }],
     },
     {
