@@ -146,12 +146,12 @@ export const getItemById = async (itemId, type, populateObj = null) => {
 
     // Apply population if populateObj is provided
     if (populateObj) {
-        query = query.populate(populateObj);
+        query = query.populate(populateObj).lean(); // Use lean() if populated
     }
 
     try {
         // Execute the query and return the populated result
-        const result = await query.lean(); // Using lean for better performance
+        const result = await query; // Using lean for better performance
         if (!result) {
             throw new Error(`${type} not found`);
         }
