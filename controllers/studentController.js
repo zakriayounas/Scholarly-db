@@ -10,7 +10,7 @@ import {
 } from "./sharedController.js";
 
 // Helper function to format a student object
-const formatStudentObject = async (student_id) => {
+const handleFormatStudentObject = async (student_id) => {
     const student = await getItemById(student_id, "student", populateClassIdField);
     return formatObjWithClassDetails(student);
 };
@@ -172,7 +172,7 @@ export const addNewStudent = async (req, res) => {
 
         const savedStudent = await newStudent.save();
 
-        const formattedStudentDetails = await formattedStudentDetails(savedStudent._id);
+        const formattedStudentDetails = await handleFormatStudentObject(savedStudent._id);
         res.status(201).json({
             message: "Student added successfully!",
             student: formattedStudentDetails,
@@ -193,7 +193,7 @@ export const viewStudentDetails = async (req, res) => {
     }
     try {
         // Fetch the existing student with class population
-        const formattedStudentDetails = await formattedStudentDetails(student_id);
+        const formattedStudentDetails = await handleFormatStudentObject(student_id);
         res.status(200).json({ details: formattedStudentDetails });
     } catch (error) {
         const statusCode = error.message === "Invalid student ID" ? 400 : 404;
@@ -257,8 +257,8 @@ export const updateStudentDetails = async (req, res) => {
             }
         });
 
-        const updatedStudent = await existingStudent.save();
-        const formattedStudentDetails = await formattedStudentDetails(student_id);
+        await existingStudent.save();
+        const formattedStudentDetails = await handleFormatStudentObject(student_id);
         res.status(200).json({
             message: "Student updated successfully!",
             student: formattedStudentDetails,
@@ -289,7 +289,7 @@ export const updateStudentStatus = async (req, res) => {
         existingStudent.status = status;
         // Save the updated student
         await existingStudent.save();
-        const formattedStudentDetails = await formattedStudentDetails(student_id);
+        const formattedStudentDetails = await handleFormatStudentObject(student_id);
 
         res.status(200).json({
             message: "Student status updated successfully!",

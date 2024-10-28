@@ -8,7 +8,7 @@ import {
 } from "./sharedController.js";
 
 // Helper function to format a schedule object
-const formatScheduleObject = async (schedule_id) => {
+const handleFormatScheduleObject = async (schedule_id) => {
     const schedule = await getItemById(schedule_id, "schedule", [
         populateClassIdField,
         populateTeacherField("instructor"),
@@ -145,7 +145,7 @@ export const addNewSchedule = async (req, res) => {
         const schedule = new Schedule(req.body);
         await schedule.save();
 
-        const formattedSchedule = await formatScheduleObject(schedule._id); // Format the newly added schedule
+        const formattedSchedule = await handleFormatScheduleObject(schedule._id); // Format the newly added schedule
         res.status(201).json({ message: "Schedule added successfully", schedule: formattedSchedule });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -157,7 +157,7 @@ export const viewScheduleDetails = async (req, res) => {
     const { schedule_id } = req.params;
 
     try {
-        const formattedSchedule = await formatScheduleObject(schedule_id);
+        const formattedSchedule = await handleFormatScheduleObject(schedule_id);
         res.status(200).json({ schedule: formattedSchedule });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -179,7 +179,7 @@ export const updateScheduleDetails = async (req, res) => {
         Object.assign(scheduleToUpdate, req.body);
         await scheduleToUpdate.save();
 
-        const formattedUpdatedSchedule = await formatScheduleObject(schedule_id); // Format the updated schedule
+        const formattedUpdatedSchedule = await handleFormatScheduleObject(schedule_id); // Format the updated schedule
         res.status(200).json({ message: "Schedule updated successfully", schedule: formattedUpdatedSchedule });
     } catch (error) {
         res.status(500).json({ message: error.message });
