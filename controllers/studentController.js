@@ -1,16 +1,30 @@
 import SchoolClass from "../models/classModel.js";
 import Student from "../models/studentModel.js";
 import { calculateAge, getRandomColor } from "../utils/helper.js";
-import { getItemById, getSequenceId, handleFetchQuery } from "./sharedController.js";
-import mongoose from "mongoose";
+import {
+    formatObjWithClassDetails,
+    getItemById,
+    getSequenceId,
+    handleFetchQuery,
+    populateClassIdField,
+} from "./sharedController.js";
+
+// Helper function to format a student object
+const formatStudentObject = async (student_id) => {
+    const student = await getItemById(student_id, "student", populateClassIdField);
+    return formatObjWithClassDetails(student);
+};
 // check class capacity
 const validateClassCapacity = (classToUpdate, studentToAdd, res) => {
     // Check if the class has space
-    if (classToUpdate.active_students_count + studentToAdd > classToUpdate.class_capacity) {
+    if (
+        classToUpdate.active_students_count + studentToAdd >
+        classToUpdate.class_capacity
+    ) {
         return res.status(400).json({
             message: "Class does not have enough capacity",
-            class_capacity: classToUpdate.class_capacity,  // Change to classToUpdate
-            active_students_count: classToUpdate.active_students_count,  // Change to classToUpdate
+            class_capacity: classToUpdate.class_capacity, // Change to classToUpdate
+            active_students_count: classToUpdate.active_students_count, // Change to classToUpdate
             required_capacity: studentToAdd,
         });
     }
@@ -18,36 +32,15 @@ const validateClassCapacity = (classToUpdate, studentToAdd, res) => {
     return true;
 };
 
-
-const populateStudentClass = {
-    path: 'class_id',
-    select: 'class_name section has_multiple_sections',  // Add class_name and has_multiple_sections
-    populate: {
-        path: 'section',
-        select: 'section_name color'
-    }
-};
-
-// Helper to format student data
-const formatStudentWithClass = (student) => {
-
-    // excluding class_id field obj and formatting class obj
-    const { class_id, ...restFields } = student;
-
-    return {
-        ...restFields,
-        class: {
-            class_id: class_id?._id,
-            class_name: class_id?.class_name || 'N/A',  // Fallback for missing data
-            has_multiple_sections: class_id?.has_multiple_sections || false,
-            section_name: class_id?.section?.section_name || 'N/A',  // Fallback for missing section
-            color: class_id?.section?.color || 'N/A'
-        }
-    };
-};
-
 // handle Student Count update
-const handleStudentCountUpdate = async (class_id, school, type, prevStatus, newStatus, res) => {
+const handleStudentCountUpdate = async (
+    class_id,
+    school,
+    type,
+    prevStatus,
+    newStatus,
+    res
+) => {
     // Find the class to check for capacity
     const classToUpdate = await SchoolClass.findById(class_id);
 
@@ -91,15 +84,12 @@ const handleStudentCountUpdate = async (class_id, school, type, prevStatus, newS
                 school.graduated_students += 1;
             }
         }
-
     }
 
     // Save class and school updates
     await classToUpdate.save();
     await school.save();
 };
-
-
 
 //  fetch School or specific class students
 export const fetchStudents = async (req, res) => {
@@ -113,27 +103,32 @@ export const fetchStudents = async (req, res) => {
     }
 
     // Destructure the values returned by handleFetchQuery
-    const { query, sortBy, school, items_per_page, skip_items } = fetchQueryResult;
+    const { query, sortBy, school, items_per_page, skip_items } =
+        fetchQueryResult;
     try {
         // Count total number of students matching the query
         const totalStudents = await Student.countDocuments(query);
 
         // Calculate the last page
         const lastPage = Math.ceil(totalStudents / items_per_page);
-        const last_page_url = `/schools/${school._id}${class_id ? `/classes/${class_id}` : ""}/students?page=${lastPage}`;
+        const last_page_url = `/schools/${school._id}${class_id ? `/classes/${class_id}` : ""
+            }/students?page=${lastPage}`;
 
         // Fetch students with pagination, sorting, and class population
         const studentsList = await Student.find(query)
-            .populate(populateStudentClass)
-            .lean()  // Use lean for better performance
-            .select('-payment -b_form -cnic_number -date_of_birth -student_age -address -school_id')
+            .populate(populateClassIdField)
+            .lean() // Use lean for better performance
+            .select(
+                "-payment -b_form -cnic_number -date_of_birth -student_age -address -school_id"
+            )
             .limit(items_per_page)
             .skip(skip_items)
             .sort(sortBy);
 
         // Format the student data
-        const formattedStudents = studentsList.map(student => formatStudentWithClass(student));
-
+        const formattedStudents = studentsList?.map((student) =>
+            formatObjWithClassDetails(student)
+        );
 
         // Return the formatted data in the response
         res.status(200).json({
@@ -143,11 +138,12 @@ export const fetchStudents = async (req, res) => {
             last_page_url,
             school: school,
         });
-
     } catch (error) {
         // Enhanced error handling
-        console.error('Error fetching students:', error); // Log the error for debugging
-        res.status(500).json({ message: 'Internal Server Error', details: error.message });
+        console.error("Error fetching students:", error); // Log the error for debugging
+        res
+            .status(500)
+            .json({ message: "Internal Server Error", details: error.message });
     }
 };
 
@@ -164,7 +160,7 @@ export const addNewStudent = async (req, res) => {
         const student_age = calculateAge(date_of_birth);
         const profile_image = req.file ? req.file.path : "";
         // Create a new student
-        await handleStudentCountUpdate(class_id, school, "add", null, null, res)
+        await handleStudentCountUpdate(class_id, school, "add", null, null, res);
         const newStudent = new Student({
             ...req.body,
             student_age,
@@ -176,9 +172,10 @@ export const addNewStudent = async (req, res) => {
 
         const savedStudent = await newStudent.save();
 
+        const formattedStudentDetails = await formattedStudentDetails(savedStudent._id);
         res.status(201).json({
             message: "Student added successfully!",
-            student: savedStudent,
+            student: formattedStudentDetails,
         });
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -188,22 +185,22 @@ export const addNewStudent = async (req, res) => {
 // view student details
 export const viewStudentDetails = async (req, res) => {
     const { student_id } = req.params;
+
+    try {
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
     try {
         // Fetch the existing student with class population
-        const existingStudent = await getItemById(student_id, "student", populateStudentClass)
-        // Format the student details
-        const student_details = formatStudentWithClass(existingStudent);
-
-        res.status(200).json({
-            details: student_details,
-        });
+        const formattedStudentDetails = await formattedStudentDetails(student_id);
+        res.status(200).json({ details: formattedStudentDetails });
     } catch (error) {
         const statusCode = error.message === "Invalid student ID" ? 400 : 404;
-        res
-            .status(statusCode)
-            .json({ message: error.message });
+        res.status(statusCode).json({ message: error.message });
     }
 };
+
 // update student details
 export const updateStudentDetails = async (req, res) => {
     const { student_id } = req.params;
@@ -223,7 +220,7 @@ export const updateStudentDetails = async (req, res) => {
     } = req.body;
 
     try {
-        const existingStudent = getItemById(student_id, "student")
+        const existingStudent = getItemById(student_id, "student");
 
         if (b_form && b_form !== existingStudent.b_form) {
             const bFormExistAlready = await Student.findOne({ b_form });
@@ -261,9 +258,10 @@ export const updateStudentDetails = async (req, res) => {
         });
 
         const updatedStudent = await existingStudent.save();
+        const formattedStudentDetails = await formattedStudentDetails(student_id);
         res.status(200).json({
             message: "Student updated successfully!",
-            student: updatedStudent,
+            student: formattedStudentDetails,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -276,18 +274,26 @@ export const updateStudentStatus = async (req, res) => {
     const school = req.school;
 
     try {
-        const existingStudent = getItemById(student_id, "student")
+        const existingStudent = getItemById(student_id, "student");
         // handling status count for class and school
-        await handleStudentCountUpdate(existingStudent.class_id, school, "status_update", existingStudent.status, status, res)
+        await handleStudentCountUpdate(
+            existingStudent.class_id,
+            school,
+            "status_update",
+            existingStudent.status,
+            status,
+            res
+        );
 
         // Update the student's status before saving
         existingStudent.status = status;
         // Save the updated student
-        const updatedStudent = await existingStudent.save();
+        await existingStudent.save();
+        const formattedStudentDetails = await formattedStudentDetails(student_id);
 
         res.status(200).json({
             message: "Student status updated successfully!",
-            student: updatedStudent,
+            student: formattedStudentDetails,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -307,7 +313,9 @@ export const moveStudentsToOtherClass = async (req, res) => {
         const oldClass = await getItemById(old_class_id, "class");
 
         // Count the number of active students being transferred
-        const activeStudentsCount = studentList.filter(student => student.status === "active").length;
+        const activeStudentsCount = studentList.filter(
+            (student) => student.status === "active"
+        ).length;
 
         // Check if the new class has enough capacity for active students
         if (!validateClassCapacity(newClass, activeStudentsCount, res)) return;
@@ -339,4 +347,3 @@ export const moveStudentsToOtherClass = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-

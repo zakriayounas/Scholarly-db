@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import Student from '../models/studentModel.js';
 import Teacher from '../models/teacherModel.js';
 import School from '../models/schoolModel.js';
+import Schedule from '../models/scheduleModel.js';
 
 // getting enroll_id in school
 export const getSequenceId = async (schoolId, type) => {
@@ -136,7 +137,8 @@ export const getItemById = async (itemId, type, populateObj = null) => {
     const collection = type === "student" ? Student :
         type === "teacher" ? Teacher :
             type === "class" ? SchoolClass :
-                type === "school" ? School : null;
+                type === "school" ? School :
+                    type === "schedule" ? Schedule : null;
 
     if (!collection) {
         throw new Error(`Invalid type: ${type}`);
@@ -161,3 +163,39 @@ export const getItemById = async (itemId, type, populateObj = null) => {
     }
 };
 
+
+// populate class obj from doc
+export const populateClassIdField = {
+    path: 'class_id',
+    select: 'class_name section has_multiple_sections',  // Add class_name and has_multiple_sections
+    populate: {
+        path: 'section',
+        select: 'section_name color'
+    }
+};
+
+// populate teacher obj from doc
+export const populateTeacherField = (teacher) => {
+    return {
+        path: teacher,
+        select: 'first_name last_name profile_color profile_image'
+    };
+};
+
+
+// // Helper to format doc data with class obj
+export const formatObjWithClassDetails = (doc) => {
+    // excluding class_id field obj and formatting class obj
+    const { class_id, ...restFields } = doc;
+
+    return {
+        ...restFields,
+        class: {
+            class_id: class_id?._id,
+            class_name: class_id?.class_name || 'N/A',  // Fallback for missing data
+            has_multiple_sections: class_id?.has_multiple_sections || false,
+            section_name: class_id?.section?.section_name || 'N/A',  // Fallback for missing section
+            color: class_id?.section?.color || 'N/A'
+        }
+    };
+};

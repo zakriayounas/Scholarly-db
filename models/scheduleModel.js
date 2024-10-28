@@ -1,47 +1,40 @@
 import mongoose from "mongoose";
 
-const teacherAssignmentSchema = new mongoose.Schema(
+const scheduleSchema = new mongoose.Schema(
     {
-        teacher_id: {
+        subject: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        instructor: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Teacher",
             required: true,
         },
-        name: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        is_specialized: {
-            type: Boolean,
-            default: false,
-        },
-    },
-    { _id: false }
-);
-
-const scheduleSchema = new mongoose.Schema(
-    {
-        schedule_name: {
-            type: String,
-            required: true,
-            trim: true,
-            unique: true,
-        },
-        schedule_teacher: {
-            type: teacherAssignmentSchema,
+        class_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "SchoolClass",
             required: true,
         },
         schedule_description: {
             type: String,
-            required: true,
-            trim: true,
-            maxlength: 200,
+            default: function () {
+                return this.subject;
+            },
         },
-        schedule_duration: {
+        start_time: {
+            type: String, // Could also be Date if you're handling more complex scheduling
+            required: true,
+        },
+        end_time: {
             type: String,
-            enum: ["30min", "40min", "50min", "60min"],
-            default: "40min",
+            required: true,
+        },
+        days: {
+            type: [String],
+            enum: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+            required: true,
         },
     },
     {

@@ -1,10 +1,12 @@
-import { getClassSchedules, getStudentSchedules, getTeacherSchedules } from '../controllers/scheduleController.js';
+import { addNewSchedule, getSchedules, removeSchedule, updateScheduleDetails, viewScheduleDetails, } from '../controllers/scheduleController.js';
 import { customRouter } from '../controllers/sharedController.js';
 const scheduleRouter = customRouter()
 
 scheduleRouter
-    .get('/class-schedule/:classId', getClassSchedules)  // GET schedules for a specific class
-    .get('/student-schedule/:classId', getStudentSchedules)  // GET schedules for students in a specific class
-    .post('/teacher-schedule/:teacherId', getTeacherSchedules);  // POST request for teacher schedules
+    .post('/add-new-schedule', addNewSchedule) // add new schedule
+    .get('/', getSchedules) // GET  schedules
+    .get('/:schedule_id/view-schedule-details', viewScheduleDetails) // view schedule details
+    .post('/:schedule_id/update-schedule', updateScheduleDetails) // update schedule details
+    .delete('/:schedule_id/delete-schedule', removeSchedule) // delete schedule 
 
 export default scheduleRouter;
