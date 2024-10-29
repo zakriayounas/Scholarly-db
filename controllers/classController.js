@@ -168,10 +168,10 @@ export const viewClassDetails = async (req, res) => {
         const existingClass = await getItemById(classId, "class", populateClassDetails);
 
         // Fetch class students, limited to 12
-        const classStudents = await getClassStudents()
+        const classStudents = await getClassStudents(classId)
 
         // Fetch class teachers from the schedule, limited to 6
-        const classTeachers = await getClassTeachers()
+        const classTeachers = await getClassTeachers(classId)
 
         // Format the instructor/teacher data
         const formattedTeachers = await Promise.all(
