@@ -7,6 +7,14 @@ const classSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+        class_avatar: {
+            type: String,
+            default: "",
+        },
+        class_avatar_id: {
+            type: String,
+            default: "",
+        },
         class_admin: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Teacher",

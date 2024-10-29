@@ -7,7 +7,6 @@ import multer from 'multer';
 import mongoose from 'mongoose';
 import School from '../models/schoolModel.js';
 import User from '../models/userModel.js';
-
 dotenv.config();
 // Middleware to parse JSON data
 export const jsonParser = express.json();
@@ -47,7 +46,7 @@ export const isAuthenticated = async (req, res, next) => {
 };
 
 //file upload middleware
-export const fileUploadMiddleware = (req, res, next) => {
+export const profileImageUploadMiddleware = (req, res, next) => {
     uploadFile.single('profile_image')(req, res, (err) => {
         if (err instanceof multer.MulterError) {
             // Handle multer-specific errors (e.g., file too large)
@@ -60,6 +59,7 @@ export const fileUploadMiddleware = (req, res, next) => {
         next();
     });
 };
+
 
 // school admin validate
 export const validateSchoolAndAdmin = async (req, res, next) => {

@@ -7,6 +7,9 @@ import Student from '../models/studentModel.js';
 import Teacher from '../models/teacherModel.js';
 import School from '../models/schoolModel.js';
 import Schedule from '../models/scheduleModel.js';
+import { v2 as cloudinary } from 'cloudinary';
+import jdenticon from 'jdenticon/standalone';
+import { Readable } from 'stream'; // Import stream to handle the buffer
 
 // getting enroll_id in school
 export const getSequenceId = async (schoolId, type) => {
@@ -198,4 +201,46 @@ export const formatObjWithClassDetails = (doc) => {
             color: class_id?.section?.color || 'N/A'
         }
     };
+};
+
+// generate avatar for class
+export const classAvatarUploadMiddleware = async (class_name) => {
+    try {
+        if (!class_name) {
+            return res.status(400).json({ message: 'Class name is required' });
+        }
+
+        // Generate the avatar using jdenticon
+        const avatarSvg = jdenticon.toSvg(class_name, 256);
+        const avatarBuffer = Buffer.from(avatarSvg);
+
+        // Create a readable stream from the buffer
+        const bufferStream = new Readable();
+        bufferStream.push(avatarBuffer);
+        bufferStream.push(null); // Signal the end of the stream
+
+        // Upload the generated avatar to Cloudinary using upload_stream
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                resource_type: 'raw',
+                public_id: `class_avatar_${Date.now()}`,
+                format: 'svg'
+            },
+            (error, result) => {
+                if (error) {
+                    return res.status(500).json({ message: 'An error occurred while uploading the class avatar', error: error.message });
+                }
+                // On success, add URL and public_id to the request body
+                return {
+                    avatarUrl: result.secure_url,
+                    avatarPublicId: result.public_id
+                }
+            }
+        );
+
+        // Pipe the buffer stream to Cloudinary's upload stream
+        bufferStream.pipe(uploadStream);
+    } catch (error) {
+        return res.status(500).json({ message: 'An error occurred while uploading the class avatar', error: error.message });
+    }
 };
