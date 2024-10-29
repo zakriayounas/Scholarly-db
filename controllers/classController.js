@@ -1,10 +1,13 @@
+import mongoose from "mongoose";
 import SchoolClass from "../models/classModel.js";
+import Schedule from "../models/scheduleModel.js";
+import Student from "../models/studentModel.js";
+import Teacher from "../models/teacherModel.js";
 import {
     getItemById,
     handleFetchQuery,
-    populateTeacherField,
+    populateTeacherField
 } from "./sharedController.js";
-import mongoose from "mongoose";
 // handling  default value of class
 const handleDefaultClass = async ({ class_name, school_id }) => {
     try {
@@ -21,6 +24,39 @@ const handleDefaultClass = async ({ class_name, school_id }) => {
         throw new Error("Error updating default class logic: " + error.message);
     }
 };
+
+// Utility function to fetch class students
+const getClassStudents = async (classId) => {
+    return Student.find({ class_id: classId })
+        .select("first_name last_name profile_color profile_image")
+        .limit(12)
+        .lean();
+};
+
+// Utility function to fetch class teachers
+const getClassTeachers = async (classId) => {
+    return Schedule.find({ class_id: classId })
+        .select("instructor -_id")
+        .limit(6)
+        .lean();
+};
+
+// Helper to format class instructors
+const formatInstructor = (instructorId) => {
+    return Teacher.findById(instructorId)
+        .select("first_name last_name profile_color profile_image")
+        .lean();
+};
+
+// Helper to format sibling classes
+const formatSiblings = (classes) => {
+    return classes.map((cl) => ({
+        class_name: cl.class_name,
+        color: cl.section.color,
+        section_name: cl.section.section_name,
+    }));
+};
+
 
 // handling class multiple sections value
 const handleClassMultiSection = async (class_name, school_id) => {
@@ -107,42 +143,69 @@ export const addNewClass = async (req, res) => {
             .json({ message: "Class added successfully!", class: savedClass });
     } catch (error) {
         const statusCode = error.code === 11000 ? 400 : 500; // Handle duplicate and general errors
-        res
-            .status(statusCode)
-            .json({
-                message: error.code === 11000 ? "Class already exists!" : error.message,
-            });
+        res.status(statusCode).json({
+            message: error.code === 11000 ? "Class already exists!" : error.message,
+        });
     }
 };
 
 // view details of single class
 export const viewClassDetails = async (req, res) => {
     const { class_id: classId } = req.params;
+    const school = req.school;
 
     try {
-        // Find the class by its ID and populate related fields (section and class_admin)
+        // Define the fields to populate (section and class_admin)
         const populateClassDetails = [
             {
                 path: "section",
-                select: "-school_id", // Specify the fields you want from Section
+                select: "-school_id", // Exclude school_id from the populated Section field
             },
-            populateTeacherField("class_admin"),
+            populateTeacherField("class_admin"), // Populate the class admin teacher details
         ];
 
-        const existingClass = await getItemById(
-            classId,
-            "class",
-            populateClassDetails
+        // Fetch the class details
+        const existingClass = await getItemById(classId, "class", populateClassDetails);
+
+        // Fetch class students, limited to 12
+        const classStudents = await getClassStudents()
+
+        // Fetch class teachers from the schedule, limited to 6
+        const classTeachers = await getClassTeachers()
+
+        // Format the instructor/teacher data
+        const formattedTeachers = await Promise.all(
+            classTeachers.map(({ instructor }) => formatInstructor(instructor))
         );
-        // Return the class details
-        res.status(200).json({ class: existingClass });
+
+        // Fetch sibling classes with the same class name under the same school
+        const sibling_classes = await SchoolClass.find({
+            school_id: school._id,
+            class_name: existingClass.class_name,
+            _id: { $ne: existingClass._id }, // Exclude the current class from sibling classes
+        }).select('_id class_name').populate('section').lean();
+
+        // formate class sibling
+        const formattedClasses = formatSiblings(sibling_classes);
+        // Return the class details, including students, teachers, and sibling classes
+        res.status(200).json({
+            details: {
+                ...existingClass,
+                students: classStudents,
+                teachers: formattedTeachers,
+                sibling_classes: formattedClasses,
+                subjects: []
+            },
+        });
     } catch (error) {
         // Handle any server errors
-        res
-            .status(500)
-            .json({ message: "An error occurred while retrieving class details" });
+        res.status(500).json({
+            message: "An error occurred while retrieving class details",
+            error: error.message,
+        });
     }
 };
+
 
 // Update class details
 export const updateClassDetails = async (req, res) => {
@@ -168,12 +231,10 @@ export const updateClassDetails = async (req, res) => {
 
         const updatedClass = await existingClass.save();
 
-        res
-            .status(200)
-            .json({
-                message: "Class details updated successfully!",
-                class: updatedClass,
-            });
+        res.status(200).json({
+            message: "Class details updated successfully!",
+            class: updatedClass,
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -206,11 +267,9 @@ export const removeClassAndTransferStudents = async (req, res) => {
             newClass.class_capacity - newClass.active_students_count;
 
         if (availableCapacityInNewClass < totalStudentsToMove) {
-            return res
-                .status(400)
-                .json({
-                    message: `New class doesn't have enough capacity (${availableCapacityInNewClass})`,
-                });
+            return res.status(400).json({
+                message: `New class doesn't have enough capacity (${availableCapacityInNewClass})`,
+            });
         }
 
         // Move students, update class capacity, set new default if needed
@@ -238,12 +297,10 @@ export const removeClassAndTransferStudents = async (req, res) => {
         // Finally, delete the old class
         await SchoolClass.findByIdAndDelete(prev_class_id);
 
-        res
-            .status(200)
-            .json({
-                message: "Class removed successfully, students moved to the new class!",
-                updated_class: newClass,
-            });
+        res.status(200).json({
+            message: "Class removed successfully, students moved to the new class!",
+            updated_class: newClass,
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
